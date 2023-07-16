@@ -16,7 +16,8 @@ import javax.inject.Inject
 data class UiState(
     val phoneNumber: String = "",
     val verificationCode: String = "",
-    val codeSent: Boolean = false
+    val codeSent: Boolean = false,
+    val userMessage: String? = null
 )
 
 @HiltViewModel
@@ -30,9 +31,13 @@ class PhoneNumberViewModel @Inject constructor(
     val uiState =
         combine(
             phoneNumberFlow, verificationCodeFlow,
-            authService.isCodeSentFlow
-        ) { number, code, codeSent ->
-            UiState(phoneNumber = number, verificationCode = code, codeSent = codeSent)
+            authService.isCodeSentFlow,
+            authService.userMessageFlow
+        ) { number, code, codeSent, userMessage ->
+            UiState(
+                phoneNumber = number, verificationCode = code,
+                codeSent = codeSent, userMessage = userMessage
+            )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000L),

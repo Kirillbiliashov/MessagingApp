@@ -22,6 +22,7 @@ class AuthenticationServiceImpl @Inject constructor(
 
     private lateinit var verificationId: String
     override val isCodeSentFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    override val userMessageFlow: MutableStateFlow<String?> = MutableStateFlow(null)
 
     override suspend fun sendVerificationCode(phoneNumber: String, activity: Activity) {
         val options = PhoneAuthOptions.newBuilder(auth)
@@ -47,14 +48,10 @@ class AuthenticationServiceImpl @Inject constructor(
         override fun onVerificationFailed(e: FirebaseException) {
 
             if (e is FirebaseAuthInvalidCredentialsException) {
-                // Invalid request
+                userMessageFlow.value = "Invalid phone number."
             } else if (e is FirebaseTooManyRequestsException) {
-                // The SMS quota for the project has been exceeded
-            } else if (e is FirebaseAuthMissingActivityForRecaptchaException) {
-                // reCAPTCHA verification attempted with null Activity
+                userMessageFlow.value = "Too many attempts. Try again in a few minutes."
             }
-
-            // Show a message and update the UI
         }
 
         override fun onCodeSent(
@@ -62,6 +59,7 @@ class AuthenticationServiceImpl @Inject constructor(
             token: PhoneAuthProvider.ForceResendingToken,
         ) {
             isCodeSentFlow.value = true
+            userMessageFlow.value = "The code is sent."
             this@AuthenticationServiceImpl.verificationId = verificationId
         }
     }
@@ -70,6 +68,7 @@ class AuthenticationServiceImpl @Inject constructor(
 
 interface AuthenticationService {
     val isCodeSentFlow: MutableStateFlow<Boolean>
+    val userMessageFlow: MutableStateFlow<String?>
     suspend fun sendVerificationCode(phoneNumber: String, activity: Activity)
     suspend fun authenticateWithVerificationCode(code: String)
 }
