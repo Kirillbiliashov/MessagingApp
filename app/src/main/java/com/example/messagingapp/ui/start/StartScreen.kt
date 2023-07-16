@@ -18,7 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun StartScreen(modifier: Modifier = Modifier) {
+fun StartScreen(
+    onButtonClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -33,14 +36,9 @@ fun StartScreen(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = modifier.padding(bottom = 32.dp)
         ) {
-            Button(onClick = { /*TODO*/ }) {
-                Text(text = "Log in")
-            }
-            Spacer(modifier = modifier.width(32.dp))
-            Button(onClick = { /*TODO*/ }) {
-                Text(text = "Sign up")
+            Button(onClick = onButtonClick) {
+                Text(text = "Start messaging")
             }
         }
-
     }
 }
