@@ -48,16 +48,25 @@ class MainActivity : ComponentActivity() {
                                 })
                         }
                         composable(route = Destinations.PHONE_NUMBER) {
-                            PhoneNumberScreen(onVerifyClick = { userExists ->
-                                val destination = if (userExists) Destinations.CHATS
-                                else Destinations.ADD_PROFILE
-                                navController.navigate(destination)
-                            })
+                            PhoneNumberScreen(
+                                onBackClick = {
+                                    navController.popBackStack()
+                                },
+                                onVerifyClick = { userExists ->
+                                    val destination = if (userExists) Destinations.CHATS
+                                    else Destinations.ADD_PROFILE
+                                    println("destination: $destination")
+                                    navController.navigate(destination)
+                                })
                         }
                         composable(route = Destinations.ADD_PROFILE) {
-                            AddProfileScreen(onCompleteClick = {
-                                navController.navigate(Destinations.CHATS)
-                            })
+                            AddProfileScreen(
+                                onBackClick = {
+                                    navController.popBackStack()
+                                },
+                                onCompleteClick = {
+                                    navController.navigate(Destinations.CHATS)
+                                })
                         }
                         composable(route = Destinations.CHATS) {
                             ChatsScreen()

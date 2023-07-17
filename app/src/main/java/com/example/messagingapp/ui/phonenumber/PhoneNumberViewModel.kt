@@ -27,9 +27,6 @@ class PhoneNumberViewModel @Inject constructor(
     private val userProfileService: UserProfileService
 ) : ViewModel() {
 
-    var userExists = false
-        private set
-
     private val phoneNumberFlow = MutableStateFlow("")
     private val verificationCodeFlow = MutableStateFlow("")
 
@@ -64,14 +61,13 @@ class PhoneNumberViewModel @Inject constructor(
         }
     }
 
-    fun verifyCode() {
+    fun verifyCode(completionHandler: (Boolean) -> Unit) {
         viewModelScope.launch {
             authService.authenticateWithVerificationCode(verificationCodeFlow.value)
             val userId = authService.currentUser?.uid
             println("user id: $userId")
             userId?.let { id ->
-                userExists = userProfileService.userExists(id)
-                println("exists: $userExists")
+                completionHandler(userProfileService.userExists(id))
             }
         }
     }
