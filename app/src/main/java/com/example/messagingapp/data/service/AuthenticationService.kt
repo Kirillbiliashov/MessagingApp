@@ -1,11 +1,11 @@
-package com.example.messagingapp.data
+package com.example.messagingapp.data.service
 
 import android.app.Activity
 import com.google.firebase.FirebaseException
 import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthMissingActivityForRecaptchaException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
@@ -23,6 +23,8 @@ class AuthenticationServiceImpl @Inject constructor(
     private lateinit var verificationId: String
     override val isCodeSentFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override val userMessageFlow: MutableStateFlow<String?> = MutableStateFlow(null)
+    override val currentUser
+        get() = auth.currentUser
 
     override suspend fun sendVerificationCode(phoneNumber: String, activity: Activity) {
         val options = PhoneAuthOptions.newBuilder(auth)
@@ -46,9 +48,8 @@ class AuthenticationServiceImpl @Inject constructor(
         }
 
         override fun onVerificationFailed(e: FirebaseException) {
-
             if (e is FirebaseAuthInvalidCredentialsException) {
-                userMessageFlow.value = "Invalid phone number."
+                userMessageFlow.value = "Invalid phone number. Enter valid phone number."
             } else if (e is FirebaseTooManyRequestsException) {
                 userMessageFlow.value = "Too many attempts. Try again in a few minutes."
             }
@@ -69,6 +70,7 @@ class AuthenticationServiceImpl @Inject constructor(
 interface AuthenticationService {
     val isCodeSentFlow: MutableStateFlow<Boolean>
     val userMessageFlow: MutableStateFlow<String?>
+    val currentUser: FirebaseUser?
     suspend fun sendVerificationCode(phoneNumber: String, activity: Activity)
     suspend fun authenticateWithVerificationCode(code: String)
 }

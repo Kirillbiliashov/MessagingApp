@@ -3,7 +3,8 @@ package com.example.messagingapp.ui.phonenumber
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.messagingapp.data.AuthenticationService
+import com.example.messagingapp.data.service.AuthenticationService
+import com.example.messagingapp.data.service.UserProfileService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,8 +23,12 @@ data class UiState(
 
 @HiltViewModel
 class PhoneNumberViewModel @Inject constructor(
-    private val authService: AuthenticationService
+    private val authService: AuthenticationService,
+    private val userProfileService: UserProfileService
 ) : ViewModel() {
+
+    var userExists = false
+        private set
 
     private val phoneNumberFlow = MutableStateFlow("")
     private val verificationCodeFlow = MutableStateFlow("")
@@ -62,7 +67,12 @@ class PhoneNumberViewModel @Inject constructor(
     fun verifyCode() {
         viewModelScope.launch {
             authService.authenticateWithVerificationCode(verificationCodeFlow.value)
+            val userId = authService.currentUser?.uid
+            println("user id: $userId")
+            userId?.let { id ->
+                userExists = userProfileService.userExists(id)
+                println("exists: $userExists")
+            }
         }
     }
-
 }

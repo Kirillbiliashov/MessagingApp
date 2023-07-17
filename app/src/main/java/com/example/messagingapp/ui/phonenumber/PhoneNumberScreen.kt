@@ -33,7 +33,10 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PhoneNumberScreen(modifier: Modifier = Modifier) {
+fun PhoneNumberScreen(
+    onVerifyClick: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val snackbarHostState = remember { SnackbarHostState() }
     val viewModel: PhoneNumberViewModel = hiltViewModel()
     val ctxt = LocalContext.current
@@ -78,7 +81,10 @@ fun PhoneNumberScreen(modifier: Modifier = Modifier) {
             }
             Spacer(modifier = modifier.height(8.dp))
             if (uiState.value.codeSent) {
-                Button(onClick = viewModel::verifyCode) {
+                Button(onClick = {
+                    viewModel.verifyCode()
+                    onVerifyClick(viewModel.userExists)
+                }) {
                     Text(text = "Verify")
                 }
             } else {

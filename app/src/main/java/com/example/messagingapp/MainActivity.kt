@@ -13,9 +13,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.messagingapp.ui.addProfile.AddProfileScreen
+import com.example.messagingapp.ui.chats.ChatsScreen
 import com.example.messagingapp.ui.phonenumber.PhoneNumberScreen
 import com.example.messagingapp.ui.start.StartScreen
 import com.example.messagingapp.ui.theme.MessagingAppTheme
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -37,7 +41,19 @@ class MainActivity : ComponentActivity() {
                             })
                         }
                         composable(route = Destinations.PHONE_NUMBER) {
-                            PhoneNumberScreen()
+                            PhoneNumberScreen(onVerifyClick = { userExists ->
+                                val destination = if (userExists) Destinations.CHATS
+                                else Destinations.ADD_PROFILE
+                                navController.navigate(destination)
+                            })
+                        }
+                        composable(route = Destinations.ADD_PROFILE) {
+                            AddProfileScreen(onCompleteClick = {
+                                navController.navigate(Destinations.CHATS)
+                            })
+                        }
+                        composable(route = Destinations.CHATS) {
+                            ChatsScreen()
                         }
                     }
                 }
@@ -49,4 +65,6 @@ class MainActivity : ComponentActivity() {
 object Destinations {
     val START = "start"
     val PHONE_NUMBER = "phoneNumber"
+    val CHATS = "chats"
+    val ADD_PROFILE = "addProfile"
 }
