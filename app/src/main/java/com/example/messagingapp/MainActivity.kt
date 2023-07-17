@@ -14,8 +14,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.messagingapp.ui.addProfile.AddProfileScreen
+import com.example.messagingapp.ui.channels.ChannelsScreen
 import com.example.messagingapp.ui.chats.ChatsScreen
 import com.example.messagingapp.ui.phonenumber.PhoneNumberScreen
+import com.example.messagingapp.ui.settings.SettingsScreen
 import com.example.messagingapp.ui.start.StartScreen
 import com.example.messagingapp.ui.theme.MessagingAppTheme
 import com.google.firebase.auth.ktx.auth
@@ -69,7 +71,25 @@ class MainActivity : ComponentActivity() {
                                 })
                         }
                         composable(route = Destinations.CHATS) {
-                            ChatsScreen()
+                            ChatsScreen(onBottomBarItemClick = {
+                                navController.navigate(it) {
+                                    launchSingleTop = true
+                                }
+                            })
+                        }
+                        composable(route = Destinations.CHANNELS) {
+                            ChannelsScreen(onBottomBarItemClick = {
+                                navController.navigate(it) {
+                                    launchSingleTop = true
+                                }
+                            })
+                        }
+                        composable(route = Destinations.SETTINGS) {
+                            SettingsScreen(onBottomBarItemClick = {
+                                navController.navigate(it) {
+                                    launchSingleTop = true
+                                }
+                            })
                         }
                     }
                 }
@@ -82,5 +102,7 @@ object Destinations {
     val START = "start"
     val PHONE_NUMBER = "phoneNumber"
     val CHATS = "chats"
+    val CHANNELS = "channels"
+    val SETTINGS = "settings"
     val ADD_PROFILE = "addProfile"
 }
