@@ -26,6 +26,8 @@ class AuthenticationServiceImpl @Inject constructor(
     override val currentUser
         get() = auth.currentUser
 
+    override val isUserAuthenticated = currentUser != null
+
     override suspend fun sendVerificationCode(phoneNumber: String, activity: Activity) {
         val options = PhoneAuthOptions.newBuilder(auth)
             .setPhoneNumber(phoneNumber)
@@ -71,6 +73,7 @@ interface AuthenticationService {
     val isCodeSentFlow: MutableStateFlow<Boolean>
     val userMessageFlow: MutableStateFlow<String?>
     val currentUser: FirebaseUser?
+    val isUserAuthenticated: Boolean
     suspend fun sendVerificationCode(phoneNumber: String, activity: Activity)
     suspend fun authenticateWithVerificationCode(code: String)
 }

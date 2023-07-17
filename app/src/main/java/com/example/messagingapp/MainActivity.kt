@@ -34,11 +34,18 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val navController = rememberNavController()
-                    NavHost(navController = navController, startDestination = Destinations.START) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = Destinations.START
+                    ) {
                         composable(route = Destinations.START) {
-                            StartScreen(onButtonClick = {
-                                navController.navigate(Destinations.PHONE_NUMBER)
-                            })
+                            StartScreen(
+                                navigateToChats = {
+                                    navController.navigate(Destinations.CHATS)
+                                },
+                                onButtonClick = {
+                                    navController.navigate(Destinations.PHONE_NUMBER)
+                                })
                         }
                         composable(route = Destinations.PHONE_NUMBER) {
                             PhoneNumberScreen(onVerifyClick = { userExists ->
