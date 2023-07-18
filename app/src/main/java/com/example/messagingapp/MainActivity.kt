@@ -10,11 +10,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.messagingapp.ui.addProfile.AddProfileScreen
 import com.example.messagingapp.ui.channels.ChannelsScreen
+import com.example.messagingapp.ui.chat.ChatScreen
 import com.example.messagingapp.ui.chats.ChatsScreen
 import com.example.messagingapp.ui.phonenumber.PhoneNumberScreen
 import com.example.messagingapp.ui.settings.SettingsScreen
@@ -69,12 +73,29 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate(Destinations.CHATS)
                                 })
                         }
-                        composable(route = Destinations.CHATS) {
-                            ChatsScreen(onBottomBarItemClick = {
-                                navController.navigate(it) {
-                                    launchSingleTop = true
-                                }
-                            })
+                        navigation(Destinations.CHATS, "chatsSection") {
+                            composable(route = Destinations.CHATS) {
+                                ChatsScreen(
+                                    onUserClick = { id ->
+                                        navController.navigate("CHAT/$id")
+                                    },
+                                    onBottomBarItemClick = {
+                                        navController.navigate(it) {
+                                            launchSingleTop = true
+                                        }
+                                    })
+                            }
+                            composable(
+                                route = Destinations.CHAT,
+                                arguments = listOf(navArgument("participantId") {
+                                    type = NavType.StringType
+                                }),
+                            ) {
+                                ChatScreen(onBackClick = {
+                                    navController.popBackStack()
+                                })
+                            }
+
                         }
                         composable(route = Destinations.CHANNELS) {
                             ChannelsScreen(onBottomBarItemClick = {
@@ -101,6 +122,7 @@ object Destinations {
     val START = "start"
     val PHONE_NUMBER = "phoneNumber"
     val CHATS = "chats"
+    val CHAT = "chat/{participantId}"
     val CHANNELS = "channels"
     val SETTINGS = "settings"
     val ADD_PROFILE = "addProfile"

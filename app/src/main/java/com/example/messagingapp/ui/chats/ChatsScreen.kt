@@ -53,6 +53,7 @@ import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
+    onUserClick: (String) -> Unit,
     onBottomBarItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -96,7 +97,11 @@ fun ChatsScreen(
                     items(items = uiState.value.users) { user ->
                         OutlinedCard(
                             modifier = modifier
-                                .fillMaxSize(),
+                                .fillMaxSize()
+                                .clickable {
+                                    viewModel.clearSearchTextField()
+                                    onUserClick(user.docId!!)
+                                },
                             shape = RoundedCornerShape(0.dp),
                             border = CardDefaults.outlinedCardBorder(enabled = false)
                         ) {

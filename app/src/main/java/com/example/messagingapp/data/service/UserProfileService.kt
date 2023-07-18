@@ -43,6 +43,13 @@ class UserProfileServiceImpl @Inject constructor(
                 .await()
                 .toObjects(User::class.java)
 
+    override suspend fun getProfileByDocumentId(docId: String): User? = firestore
+        .collection("users")
+        .document(docId)
+        .get()
+        .await()
+        .toObject(User::class.java)
+
 }
 
 interface UserProfileService {
@@ -50,4 +57,6 @@ interface UserProfileService {
     suspend fun saveProfile(user: User)
 
     suspend fun getProfilesByQuery(query: String): List<User>
+
+    suspend fun getProfileByDocumentId(docId: String): User?
 }
