@@ -61,8 +61,10 @@ data class UiState(
 )
 
 fun UiState.toUser() = User(
-    firstName = firstName,
-    lastName = lastName,
-    description = description,
-    tag = tag
+    firstName = firstName.nullIfEmpty(),
+    lastName = lastName.nullIfEmpty(),
+    description = description.nullIfEmpty(),
+    tag = tag.nullIfEmpty()
 )
+
+private fun String.nullIfEmpty(): String? = this.ifEmpty { null }

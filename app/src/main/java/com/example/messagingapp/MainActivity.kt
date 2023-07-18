@@ -57,7 +57,6 @@ class MainActivity : ComponentActivity() {
                                 onVerifyClick = { userExists ->
                                     val destination = if (userExists) Destinations.CHATS
                                     else Destinations.ADD_PROFILE
-                                    println("destination: $destination")
                                     navController.navigate(destination)
                                 })
                         }
