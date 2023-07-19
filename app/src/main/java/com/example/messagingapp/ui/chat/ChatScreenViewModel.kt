@@ -63,11 +63,13 @@ class ChatScreenViewModel @Inject constructor(
     fun sendMessage() {
         val message = Message(
             content = currentMessageFlow.value,
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
+            receiverId = participantId,
+            senderId = userId
         )
         currentMessageFlow.value = ""
         viewModelScope.launch {
-            chatService.saveMessage(participantId, message)
+            chatService.saveMessage(message)
         }
     }
 

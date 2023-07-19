@@ -82,11 +82,11 @@ fun ChatScreen(
         ) {
             LazyColumn {
                 items(items = uiState.value.messages) { message ->
-                    val userRowModifier = if (message.userId == viewModel.userId)
+                    val userRowModifier = if (message.senderId == viewModel.userId)
                         modifier.padding(start = 24.dp, end = 8.dp)
                     else modifier.padding(start = 8.dp, end = 24.dp)
                     Row(modifier = userRowModifier.fillMaxWidth()) {
-                        if (message.userId == viewModel.userId) {
+                        if (message.senderId == viewModel.userId) {
                             Spacer(modifier = modifier.weight(1f))
                         }
                         Card(
@@ -100,7 +100,7 @@ fun ChatScreen(
                                 Text(text = message.content!!)
                             }
                         }
-                        if (message.userId == viewModel.participantId) {
+                        if (message.senderId == viewModel.participantId) {
                             Spacer(modifier = modifier.weight(1f))
                         }
                     }
