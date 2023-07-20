@@ -3,18 +3,16 @@ package com.example.messagingapp.ui.chat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.messagingapp.data.model.Message
-import com.example.messagingapp.data.model.User
+import com.example.messagingapp.data.model.firebase.Message
+import com.example.messagingapp.data.model.firebase.User
 import com.example.messagingapp.data.service.AuthenticationService
 import com.example.messagingapp.data.service.ChatService
 import com.example.messagingapp.data.service.UserProfileService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 

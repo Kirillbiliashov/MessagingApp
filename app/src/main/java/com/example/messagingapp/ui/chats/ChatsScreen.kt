@@ -38,6 +38,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.R
@@ -91,8 +93,8 @@ fun ChatsScreen(
                     .fillMaxWidth(0.95F)
                     .height(52.dp)
             )
+            Spacer(modifier = modifier.height(8.dp))
             if (uiState.value.users.isNotEmpty()) {
-                Spacer(modifier = modifier.height(8.dp))
                 LazyColumn {
                     items(items = uiState.value.users) { user ->
                         OutlinedCard(
@@ -135,6 +137,53 @@ fun ChatsScreen(
                                     if (user.tag != null) {
                                         Text(text = "@${user.tag}")
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                LazyColumn {
+                    items(items = uiState.value.chatItems) { chatItem ->
+                        val user = chatItem.member!!
+                        OutlinedCard(
+                            shape = RoundedCornerShape(0.dp),
+                            border = CardDefaults.outlinedCardBorder(enabled = false),
+                            modifier = modifier.clickable {
+                                onUserClick(user.docId!!)
+                            }
+                        ) {
+                            Row(
+                                modifier = modifier
+                                    .fillMaxSize()
+                                    .padding(4.dp)
+                                    .padding(horizontal = 12.dp),
+                            ) {
+                                Image(
+                                    painter = painterResource(com.google.firebase.appcheck.interop.R.drawable.googleg_disabled_color_18),
+                                    contentDescription = null,
+                                    modifier = modifier.size(52.dp)
+                                )
+                                Spacer(modifier = modifier.width(16.dp))
+                                Column(modifier = modifier.fillMaxHeight()) {
+                                    if (user.firstName != null) {
+                                        Text(
+                                            text = "${user.firstName} ${user.lastName}",
+                                            fontWeight = FontWeight.W500,
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    } else {
+                                        Text(
+                                            text = user.phoneNumber!!,
+                                            fontWeight = FontWeight.W600,
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    }
+                                    Text(
+                                        text = chatItem.lastMessage?.content ?: "",
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
                             }
                         }

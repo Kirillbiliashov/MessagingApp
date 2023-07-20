@@ -1,4 +1,4 @@
-package com.example.messagingapp.data.model
+package com.example.messagingapp.data.model.firebase
 
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.IgnoreExtraProperties

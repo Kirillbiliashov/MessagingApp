@@ -2,38 +2,57 @@ package com.example.messagingapp.ui.chats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.messagingapp.data.model.User
+import com.example.messagingapp.data.model.ChatItem
+import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.data.service.ChatService
 import com.example.messagingapp.data.service.UserProfileService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class UiState(
     val searchQuery: String? = null,
-    val users: List<User> = listOf()
+    val users: List<User> = listOf(),
+    val chatItems: List<ChatItem> = listOf()
 )
 
 @HiltViewModel
 class ChatsScreenViewModel @Inject constructor(
-    private val userProfileService: UserProfileService
+    private val userProfileService: UserProfileService,
+    private val chatService: ChatService
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState: StateFlow<UiState> = _uiState
+    private val searchQueryFlow: MutableStateFlow<String?> = MutableStateFlow(null)
+    private val usersFlow = MutableStateFlow(listOf<User>())
+
+    val uiState = combine(
+        searchQueryFlow, usersFlow,
+        chatService.userChatsFlow
+    ) { searchQuery, users, chatItems ->
+        UiState(searchQuery, users, chatItems)
+    }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = UiState()
+        )
+
 
     fun updateSearchQuery(newValue: String) {
-        _uiState.update { it.copy(searchQuery = newValue) }
+        searchQueryFlow.value = newValue
         viewModelScope.launch {
             val newQueryResult = userProfileService.getProfilesByQuery(newValue)
-            _uiState.update { it.copy(users = newQueryResult) }
+            usersFlow.value = newQueryResult
         }
     }
 
     fun clearSearchTextField() {
-        _uiState.update { it.copy(searchQuery = null, users = listOf()) }
+        searchQueryFlow.value = null
+        usersFlow.value = listOf()
     }
 
 }

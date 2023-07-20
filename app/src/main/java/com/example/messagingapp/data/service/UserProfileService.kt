@@ -1,6 +1,6 @@
 package com.example.messagingapp.data.service
 
-import com.example.messagingapp.data.model.User
+import com.example.messagingapp.data.model.firebase.User
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
