@@ -5,7 +5,7 @@ import com.example.messagingapp.data.model.ChatItem
 import com.example.messagingapp.data.model.firebase.Message
 import com.example.messagingapp.data.model.firebase.User
 import com.example.messagingapp.utils.Constants.CHATS_COLL
-import com.example.messagingapp.utils.Constants.LAST_MESSAGE_ID_FIELD
+import com.example.messagingapp.utils.Constants.LAST_MESSAGE_FIELD
 import com.example.messagingapp.utils.Constants.LAST_UPDATED_FIELD
 import com.example.messagingapp.utils.Constants.MEMBERS_FIELD
 import com.example.messagingapp.utils.Constants.MESSAGES_COLL
@@ -58,21 +58,13 @@ class ChatServiceImpl @Inject constructor(
 
     private suspend fun getChatItem(chat: Chat): ChatItem {
         val participantId = chat.members!!.first { it != currUserId }
-        val message = firestore
-            .collection(CHATS_COLL)
-            .document(chat.docId!!)
-            .collection(MESSAGES_COLL)
-            .document(chat.lastMessageId!!)
-            .get()
-            .await()
-            .toObject(Message::class.java)
         val member = firestore
             .collection(USERS_COLL)
             .document(participantId)
             .get()
             .await()
             .toObject(User::class.java)
-        return ChatItem(member = member, lastMessage = message)
+        return ChatItem(member = member, lastMessage = chat.lastMessage)
     }
 
     override fun getChatMessagesFlow(participantId: String) = callbackFlow {
@@ -117,14 +109,12 @@ class ChatServiceImpl @Inject constructor(
         .await()
 
     private suspend fun addMessageToExistingDocument(docId: String, message: Message) {
-        val chatDoc = firestore
-            .collection(CHATS_COLL)
-            .document(docId)
+        val chatDoc = firestore.collection(CHATS_COLL).document(docId)
         val messagesColl = chatDoc.collection(MESSAGES_COLL)
         val messageId = messagesColl.document().id
         firestore.runBatch { writeBatch ->
             writeBatch.set(messagesColl.document(messageId), message)
-            writeBatch.update(chatDoc, LAST_MESSAGE_ID_FIELD, messageId)
+            writeBatch.update(chatDoc, LAST_MESSAGE_FIELD, message)
             writeBatch.update(chatDoc, LAST_UPDATED_FIELD, System.currentTimeMillis())
         }.await()
     }
@@ -136,13 +126,12 @@ class ChatServiceImpl @Inject constructor(
         val messageId = chatDoc.collection(MESSAGES_COLL).document().id
         val messageDoc = chatDoc.collection(MESSAGES_COLL).document(messageId)
         val chat = Chat(
-            members = listOf(message.receiverId!!, currUserId).sorted(),
-            lastMessageId = messageId
+            members = listOf(message.receiverId!!, currUserId).sorted()
         )
         firestore.runBatch { writeBatch ->
             val currTime = System.currentTimeMillis()
-            writeBatch.set(chatDoc, chat.copy(lastUpdated = currTime))
             writeBatch.set(messageDoc, message)
+            writeBatch.set(chatDoc, chat.copy(lastUpdated = currTime, lastMessage = message))
         }.await()
     }
 
