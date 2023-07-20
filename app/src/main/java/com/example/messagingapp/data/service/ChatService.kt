@@ -4,6 +4,15 @@ import com.example.messagingapp.data.model.firebase.Chat
 import com.example.messagingapp.data.model.ChatItem
 import com.example.messagingapp.data.model.firebase.Message
 import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.utils.Constants.CHATS_COLL
+import com.example.messagingapp.utils.Constants.LAST_MESSAGE_ID_FIELD
+import com.example.messagingapp.utils.Constants.LAST_UPDATED_FIELD
+import com.example.messagingapp.utils.Constants.MEMBERS_FIELD
+import com.example.messagingapp.utils.Constants.MESSAGES_COLL
+import com.example.messagingapp.utils.Constants.RECEIVER_ID_FIELD
+import com.example.messagingapp.utils.Constants.SENDER_ID_FIELD
+import com.example.messagingapp.utils.Constants.TIMESTAMP_FIELD
+import com.example.messagingapp.utils.Constants.USERS_COLL
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
@@ -28,9 +37,9 @@ class ChatServiceImpl @Inject constructor(
     private val currUserId = auth.currentUser!!.uid
 
     override val userChatsFlow = callbackFlow {
-        val listener = firestore.collection("chats")
-            .whereArrayContains("members", currUserId)
-            .orderBy("lastUpdated", Query.Direction.DESCENDING)
+        val listener = firestore.collection(CHATS_COLL)
+            .whereArrayContains(MEMBERS_FIELD, currUserId)
+            .orderBy(LAST_UPDATED_FIELD, Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) {
                     cancel()
@@ -50,15 +59,15 @@ class ChatServiceImpl @Inject constructor(
     private suspend fun getChatItem(chat: Chat): ChatItem {
         val participantId = chat.members!!.first { it != currUserId }
         val message = firestore
-            .collection("chats")
+            .collection(CHATS_COLL)
             .document(chat.docId!!)
-            .collection("messages")
+            .collection(MESSAGES_COLL)
             .document(chat.lastMessageId!!)
             .get()
             .await()
             .toObject(Message::class.java)
         val member = firestore
-            .collection("users")
+            .collection(USERS_COLL)
             .document(participantId)
             .get()
             .await()
@@ -76,17 +85,17 @@ class ChatServiceImpl @Inject constructor(
     }
 
     private fun getMessagesQuery(participantId: String) = firestore
-        .collectionGroup("messages")
-        .orderBy("timestamp")
+        .collectionGroup(MESSAGES_COLL)
+        .orderBy(TIMESTAMP_FIELD)
         .where(
             Filter.or(
                 Filter.and(
-                    Filter.equalTo("senderId", currUserId),
-                    Filter.equalTo("receiverId", participantId)
+                    Filter.equalTo(SENDER_ID_FIELD, currUserId),
+                    Filter.equalTo(RECEIVER_ID_FIELD, participantId)
                 ),
                 Filter.and(
-                    Filter.equalTo("senderId", participantId),
-                    Filter.equalTo("receiverId", currUserId)
+                    Filter.equalTo(SENDER_ID_FIELD, participantId),
+                    Filter.equalTo(RECEIVER_ID_FIELD, currUserId)
                 )
             )
         )
@@ -101,40 +110,38 @@ class ChatServiceImpl @Inject constructor(
     }
 
     private suspend fun getChatDoc(participantId: String) = firestore
-        .collection("chats")
-        .whereEqualTo(
-            "members",
-            arrayOf(participantId, currUserId).sorted()
-        )
+        .collection(CHATS_COLL)
+        .whereEqualTo(MEMBERS_FIELD, arrayOf(participantId, currUserId).sorted())
         .limit(1)
         .get()
         .await()
 
     private suspend fun addMessageToExistingDocument(docId: String, message: Message) {
         val chatDoc = firestore
-            .collection("chats")
+            .collection(CHATS_COLL)
             .document(docId)
-        val messagesColl = chatDoc.collection("messages")
+        val messagesColl = chatDoc.collection(MESSAGES_COLL)
         val messageId = messagesColl.document().id
         firestore.runBatch { writeBatch ->
             writeBatch.set(messagesColl.document(messageId), message)
-            writeBatch.update(chatDoc, "lastMessageId", messageId)
-            writeBatch.update(chatDoc, "lastUpdated", System.currentTimeMillis())
+            writeBatch.update(chatDoc, LAST_MESSAGE_ID_FIELD, messageId)
+            writeBatch.update(chatDoc, LAST_UPDATED_FIELD, System.currentTimeMillis())
         }.await()
     }
 
     private suspend fun createChatWithMessage(message: Message) {
-        val chatsColl = firestore.collection("chats")
+        val chatsColl = firestore.collection(CHATS_COLL)
         val chatId = chatsColl.document().id
         val chatDoc = chatsColl.document(chatId)
-        val messageId = chatDoc.collection("messages").document().id
-        val messageDoc = chatDoc.collection("messages").document(messageId)
+        val messageId = chatDoc.collection(MESSAGES_COLL).document().id
+        val messageDoc = chatDoc.collection(MESSAGES_COLL).document(messageId)
         val chat = Chat(
             members = listOf(message.receiverId!!, currUserId).sorted(),
             lastMessageId = messageId
         )
         firestore.runBatch { writeBatch ->
-            writeBatch.set(chatDoc, chat.copy(lastUpdated = System.currentTimeMillis()))
+            val currTime = System.currentTimeMillis()
+            writeBatch.set(chatDoc, chat.copy(lastUpdated = currTime))
             writeBatch.set(messageDoc, message)
         }.await()
     }

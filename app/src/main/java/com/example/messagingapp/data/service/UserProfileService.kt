@@ -1,6 +1,10 @@
 package com.example.messagingapp.data.service
 
 import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.utils.Constants
+import com.example.messagingapp.utils.Constants.PHONE_NUMBER_FIELD
+import com.example.messagingapp.utils.Constants.TAG_FIELD
+import com.example.messagingapp.utils.Constants.USERS_COLL
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -13,7 +17,7 @@ class UserProfileServiceImpl @Inject constructor(
 ) : UserProfileService {
     override suspend fun userExists(userId: String): Boolean {
         return firestore
-            .collection("users")
+            .collection(USERS_COLL)
             .document(userId)
             .get()
             .await()
@@ -21,22 +25,21 @@ class UserProfileServiceImpl @Inject constructor(
     }
 
     override suspend fun saveProfile(user: User) {
-        firestore.collection("users").document(user.docId!!).set(user).await()
+        firestore.collection(USERS_COLL).document(user.docId!!).set(user).await()
     }
 
     override suspend fun getProfilesByQuery(query: String): List<User> =
         if (query.length < 4) listOf() else
             firestore
-                .collection("users")
-                .orderBy("tag")
+                .collection(USERS_COLL)
+                .orderBy(TAG_FIELD)
                 .where(
                     Filter.or(
-                        Filter.equalTo("phoneNumber", query),
+                        Filter.equalTo(PHONE_NUMBER_FIELD, query),
                         Filter.and(
-                            Filter.greaterThanOrEqualTo("tag", query),
-                            Filter.lessThanOrEqualTo("tag", "$query\uf8ff")
+                            Filter.greaterThanOrEqualTo(TAG_FIELD, query),
+                            Filter.lessThanOrEqualTo(TAG_FIELD, "$query\uf8ff")
                         )
-
                     )
                 )
                 .get()
@@ -44,7 +47,7 @@ class UserProfileServiceImpl @Inject constructor(
                 .toObjects(User::class.java)
 
     override suspend fun getProfileByDocumentId(docId: String): User? = firestore
-        .collection("users")
+        .collection(USERS_COLL)
         .document(docId)
         .get()
         .await()
