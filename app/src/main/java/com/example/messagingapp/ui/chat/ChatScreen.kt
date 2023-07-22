@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.messagingapp.data.model.firebase.Message
+import com.example.messagingapp.data.model.firebase.User
 import com.google.firebase.appcheck.interop.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,32 +46,17 @@ fun ChatScreen(
 ) {
     val viewModel: ChatScreenViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsState()
-    val participant = uiState.value.participant
     Scaffold(topBar = {
         TopAppBar(
             title = {
-                participant?.let {
-                    val text = if (it.firstName != null)
-                        "${it.firstName} ${it.lastName}" else it.phoneNumber!!
-                    Column(
-                        modifier = modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(horizontalArrangement = Arrangement.Center) {
-                            Text(text = text)
-                            Spacer(modifier = modifier.weight(1f))
-                            Image(
-                                painter = painterResource(R.drawable.googleg_disabled_color_18),
-                                contentDescription = null,
-                                modifier = modifier.size(36.dp)
-                            )
-                        }
-                    }
-                }
+                ChatScreenTopBarContent(participant = uiState.value.participant)
             },
             navigationIcon = {
                 IconButton(onClick = onBackClick) {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = null
+                    )
                 }
             })
     }) { padding ->
@@ -81,50 +68,101 @@ fun ChatScreen(
         ) {
             LazyColumn {
                 items(items = uiState.value.messages) { message ->
-                    val userRowModifier = if (message.senderId == viewModel.userId)
-                        modifier.padding(start = 24.dp, end = 8.dp)
-                    else modifier.padding(start = 8.dp, end = 24.dp)
-                    Row(modifier = userRowModifier.fillMaxWidth()) {
-                        if (message.senderId == viewModel.userId) {
-                            Spacer(modifier = modifier.weight(1f))
-                        }
-                        Card(
-                            modifier = modifier
-                                .padding(4.dp)
-                        ) {
-                            Column(
-                                modifier = modifier
-                                    .padding(8.dp)
-                            ) {
-                                Text(text = message.content!!)
-                            }
-                        }
-                        if (message.senderId == viewModel.participantId) {
-                            Spacer(modifier = modifier.weight(1f))
-                        }
-                    }
+                    MessageRow(
+                        message = message,
+                        userId = viewModel.userId,
+                        participantId = viewModel.participantId
+                    )
                 }
             }
             Spacer(modifier = modifier.weight(1f))
-            OutlinedTextField(
+            MessageTextField(
                 value = uiState.value.currentMessage,
                 onValueChange = viewModel::updateMessageTextField,
-                placeholder = { Text(text = "Type your message...") },
-                trailingIcon = {
-                    val iconColor = if (uiState.value.currentMessage.isEmpty())
-                        LocalContentColor.current
-                    else MaterialTheme.colorScheme.primary
-                    IconButton(onClick = viewModel::sendMessage) {
-                        Icon(
-                            imageVector = Icons.Default.Send,
-                            contentDescription = null, tint = iconColor
-                        )
-                    }
-                },
-                modifier = modifier
-                    .fillMaxWidth(0.95f)
-                    .padding(bottom = 8.dp)
+                onSendIconClick = viewModel::sendMessage
             )
         }
     }
+}
+
+@Composable
+fun ChatScreenTopBarContent(participant: User?, modifier: Modifier = Modifier) {
+    participant?.let {
+        val text = if (it.firstName != null)
+            "${it.firstName} ${it.lastName}" else it.phoneNumber!!
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(horizontalArrangement = Arrangement.Center) {
+                Text(text = text)
+                Spacer(modifier = modifier.weight(1f))
+                Image(
+                    painter = painterResource(R.drawable.googleg_disabled_color_18),
+                    contentDescription = null,
+                    modifier = modifier.size(36.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MessageRow(
+    message: Message,
+    userId: String,
+    participantId: String,
+    modifier: Modifier = Modifier
+) {
+    val userRowModifier = if (message.senderId == userId)
+        modifier.padding(start = 24.dp, end = 8.dp)
+    else modifier.padding(start = 8.dp, end = 24.dp)
+    Row(modifier = userRowModifier.fillMaxWidth()) {
+        if (message.senderId == userId) {
+            Spacer(modifier = modifier.weight(1f))
+        }
+        Card(
+            modifier = modifier
+                .padding(4.dp)
+        ) {
+            Column(
+                modifier = modifier
+                    .padding(8.dp)
+            ) {
+                Text(text = message.content!!)
+            }
+        }
+        if (message.senderId == participantId) {
+            Spacer(modifier = modifier.weight(1f))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MessageTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onSendIconClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(text = "Type your message...") },
+        trailingIcon = {
+            val iconColor = if (value.isEmpty())
+                LocalContentColor.current
+            else MaterialTheme.colorScheme.primary
+            IconButton(onClick = onSendIconClick) {
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = null, tint = iconColor
+                )
+            }
+        },
+        modifier = modifier
+            .fillMaxWidth(0.95f)
+            .padding(bottom = 8.dp)
+    )
 }

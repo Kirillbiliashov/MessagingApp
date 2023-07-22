@@ -38,6 +38,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.R
+import com.example.messagingapp.data.model.firebase.Chat
+import com.example.messagingapp.data.model.firebase.User
 import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,125 +61,153 @@ fun ChatsScreen(
                 .padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            OutlinedTextField(
-                leadingIcon = {
-                    Icon(imageVector = Icons.Default.Search, contentDescription = null)
-                },
-                trailingIcon = {
-                    uiState.value.searchQuery?.let {
-                        IconButton(onClick = viewModel::clearSearchTextField) {
-                            Icon(imageVector = Icons.Default.Clear, contentDescription = null)
-                        }
-                    }
-                },
-                value = uiState.value.searchQuery ?: "",
+            SearchTextField(
+                value = uiState.value.searchQuery,
                 onValueChange = viewModel::updateSearchQuery,
-                placeholder = {
-                    Column(modifier = modifier.fillMaxHeight()) {
-                        Text(text = "Search")
-                    }
-                },
-                modifier = modifier
-                    .fillMaxWidth(0.95F)
-                    .height(52.dp)
+                onClearIconClick = viewModel::clearSearchTextField
             )
             Spacer(modifier = modifier.height(8.dp))
             if (uiState.value.users.isNotEmpty()) {
                 LazyColumn {
                     items(items = uiState.value.users) { user ->
-                        OutlinedCard(
-                            modifier = modifier
-                                .fillMaxSize()
-                                .clickable {
-                                    viewModel.clearSearchTextField()
-                                    onUserClick(user.docId!!, null)
-                                },
-                            shape = RoundedCornerShape(0.dp),
-                            border = CardDefaults.outlinedCardBorder(enabled = false)
-                        ) {
-                            Row(
-                                modifier = modifier
-                                    .fillMaxSize()
-                                    .padding(4.dp)
-                                    .padding(start = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Image(
-                                    painter = painterResource(com.google.firebase.database.collection.R.drawable.googleg_disabled_color_18),
-                                    contentDescription = null,
-                                    modifier = modifier.size(36.dp)
-                                )
-                                Spacer(modifier = modifier.width(16.dp))
-                                Column(modifier = modifier.fillMaxHeight()) {
-                                    if (user.firstName != null) {
-                                        Text(
-                                            text = "${user.firstName} ${user.lastName}",
-                                            fontWeight = FontWeight.W500,
-                                            style = MaterialTheme.typography.titleMedium
-                                        )
-                                    } else {
-                                        Text(
-                                            text = user.phoneNumber!!,
-                                            fontWeight = FontWeight.W600,
-                                            style = MaterialTheme.typography.titleMedium
-                                        )
-                                    }
-                                    if (user.tag != null) {
-                                        Text(text = "@${user.tag}")
-                                    }
-                                }
-                            }
-                        }
+                        UserCard(user = user, onUserClick = {
+                            viewModel.clearSearchTextField()
+                            onUserClick(user.docId!!, null)
+                        })
                     }
                 }
             } else {
                 LazyColumn {
                     items(items = uiState.value.chatsMap.entries.toList()) { (user, chat) ->
-                        OutlinedCard(
-                            shape = RoundedCornerShape(0.dp),
-                            border = CardDefaults.outlinedCardBorder(enabled = false),
-                            modifier = modifier.clickable {
-                                onUserClick(user.docId!!, chat.docId)
-                            }
-                        ) {
-                            Row(
-                                modifier = modifier
-                                    .fillMaxSize()
-                                    .padding(4.dp)
-                                    .padding(horizontal = 12.dp),
-                            ) {
-                                Image(
-                                    painter = painterResource(com.google.firebase.appcheck.interop.R.drawable.googleg_disabled_color_18),
-                                    contentDescription = null,
-                                    modifier = modifier.size(52.dp)
-                                )
-                                Spacer(modifier = modifier.width(16.dp))
-                                Column(modifier = modifier.fillMaxHeight()) {
-                                    if (user.firstName != null) {
-                                        Text(
-                                            text = "${user.firstName} ${user.lastName}",
-                                            fontWeight = FontWeight.W500,
-                                            style = MaterialTheme.typography.titleMedium
-                                        )
-                                    } else {
-                                        Text(
-                                            text = user.phoneNumber!!,
-                                            fontWeight = FontWeight.W600,
-                                            style = MaterialTheme.typography.titleMedium
-                                        )
-                                    }
-                                    Text(
-                                        text = chat.lastMessage?.content ?: "",
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
-                        }
+                        ChatCard(chat = chat, participant = user, onChatClick = {
+                            onUserClick(user.docId!!, chat.docId)
+                        })
                     }
                 }
             }
         }
     }
 
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchTextField(
+    value: String?,
+    onValueChange: (String) -> Unit,
+    onClearIconClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        leadingIcon = {
+            Icon(imageVector = Icons.Default.Search, contentDescription = null)
+        },
+        trailingIcon = {
+            value?.let {
+                IconButton(onClick = onClearIconClick) {
+                    Icon(imageVector = Icons.Default.Clear, contentDescription = null)
+                }
+            }
+        },
+        value = value ?: "",
+        onValueChange = onValueChange,
+        placeholder = {
+            Column(modifier = modifier.fillMaxHeight()) {
+                Text(text = "Search")
+            }
+        },
+        modifier = modifier
+            .fillMaxWidth(0.95F)
+            .height(52.dp)
+    )
+}
+
+@Composable
+fun UserCard(
+    user: User,
+    onUserClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedCard(
+        modifier = modifier
+            .fillMaxSize()
+            .clickable {
+                onUserClick()
+            },
+        shape = RoundedCornerShape(0.dp),
+        border = CardDefaults.outlinedCardBorder(enabled = false)
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(4.dp)
+                .padding(start = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(com.google.firebase.database.collection.R.drawable.googleg_disabled_color_18),
+                contentDescription = null,
+                modifier = modifier.size(36.dp)
+            )
+            Spacer(modifier = modifier.width(16.dp))
+            Column(modifier = modifier.fillMaxHeight()) {
+                UserCardHeader(user = user)
+                if (user.tag != null) {
+                    Text(text = "@${user.tag}")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ChatCard(
+    chat: Chat, participant: User,
+    onChatClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedCard(
+        shape = RoundedCornerShape(0.dp),
+        border = CardDefaults.outlinedCardBorder(enabled = false),
+        modifier = modifier.clickable { onChatClick() }
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(4.dp)
+                .padding(horizontal = 12.dp),
+        ) {
+            Image(
+                painter = painterResource(com.google.firebase.appcheck.interop.R.drawable.googleg_disabled_color_18),
+                contentDescription = null,
+                modifier = modifier.size(52.dp)
+            )
+            Spacer(modifier = modifier.width(16.dp))
+            Column(modifier = modifier.fillMaxHeight()) {
+                UserCardHeader(user = participant)
+                Text(
+                    text = chat.lastMessage?.content ?: "",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun UserCardHeader(user: User, modifier: Modifier = Modifier) {
+    if (user.firstName != null) {
+        Text(
+            text = "${user.firstName} ${user.lastName}",
+            fontWeight = FontWeight.W500,
+            style = MaterialTheme.typography.titleMedium
+        )
+    } else {
+        Text(
+            text = user.phoneNumber!!,
+            fontWeight = FontWeight.W600,
+            style = MaterialTheme.typography.titleMedium
+        )
+    }
 }
