@@ -40,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.R
 import com.example.messagingapp.data.model.firebase.Chat
 import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.data.model.firebase.timestampToString
 import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -184,9 +185,12 @@ fun ChatCard(
             )
             Spacer(modifier = modifier.width(16.dp))
             Column(modifier = modifier.fillMaxHeight()) {
-                UserCardHeader(user = participant)
+                UserCardHeader(
+                    user = participant,
+                    dateString = chat.lastMessage!!.timestampToString("HH:mm")
+                )
                 Text(
-                    text = chat.lastMessage?.content ?: "",
+                    text = chat.lastMessage.content ?: "",
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -196,18 +200,28 @@ fun ChatCard(
 }
 
 @Composable
-fun UserCardHeader(user: User, modifier: Modifier = Modifier) {
-    if (user.firstName != null) {
-        Text(
-            text = "${user.firstName} ${user.lastName}",
-            fontWeight = FontWeight.W500,
-            style = MaterialTheme.typography.titleMedium
-        )
-    } else {
-        Text(
-            text = user.phoneNumber!!,
-            fontWeight = FontWeight.W600,
-            style = MaterialTheme.typography.titleMedium
-        )
+fun UserCardHeader(
+    user: User, dateString: String? = null,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier.fillMaxWidth()) {
+        if (user.firstName != null) {
+            Text(
+                text = "${user.firstName} ${user.lastName}",
+                fontWeight = FontWeight.W500,
+                style = MaterialTheme.typography.titleMedium
+            )
+        } else {
+            Text(
+                text = user.phoneNumber!!,
+                fontWeight = FontWeight.W600,
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+        if (dateString != null) {
+            Spacer(modifier = modifier.weight(1f))
+            Text(text = dateString)
+        }
     }
+
 }

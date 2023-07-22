@@ -3,6 +3,7 @@ package com.example.messagingapp.ui.chat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,11 +12,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,9 +36,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.data.model.firebase.Message
 import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.data.model.firebase.timestampToString
+import com.example.messagingapp.utils.Helpers
+import com.example.messagingapp.utils.Helpers.asTimestampToString
 import com.google.firebase.appcheck.interop.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,13 +73,31 @@ fun ChatScreen(
                 .padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            LazyColumn {
-                items(items = uiState.value.messages) { message ->
-                    MessageRow(
-                        message = message,
-                        userId = viewModel.userId,
-                        participantId = viewModel.participantId
+            val messagesByDateMap = uiState.value.messages.groupBy {
+                it.timestampToString("MM.dd.yyyy")
+            }
+            messagesByDateMap.forEach { (date, messages) ->
+                Badge(
+                    containerColor = MaterialTheme.colorScheme.outlineVariant,
+                    modifier = modifier.padding(vertical = 8.dp)
+                ) {
+                    val displayDate = if (date == Helpers.currDate
+                            .asTimestampToString("MM.dd.yyyy")
                     )
+                        "Today" else date
+                    Text(
+                        text = displayDate,
+                        modifier = modifier.padding(4.dp), fontSize = 12.sp
+                    )
+                }
+                LazyColumn {
+                    items(items = messages) { message ->
+                        MessageRow(
+                            message = message,
+                            userId = viewModel.userId,
+                            participantId = viewModel.participantId
+                        )
+                    }
                 }
             }
             Spacer(modifier = modifier.weight(1f))
@@ -121,15 +146,23 @@ fun MessageRow(
         if (message.senderId == userId) {
             Spacer(modifier = modifier.weight(1f))
         }
-        Card(
-            modifier = modifier
-                .padding(4.dp)
-        ) {
-            Column(
-                modifier = modifier
-                    .padding(8.dp)
-            ) {
-                Text(text = message.content!!)
+        Card(modifier = modifier.padding(4.dp)) {
+            Box {
+                Column(
+                    modifier = modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 8.dp, bottom = 4.dp)
+                ) {
+                    Text(text = message.timestampToString("HH:mm"), fontSize = 12.sp)
+                }
+                Column(
+                    modifier = modifier
+                        .padding(8.dp)
+                        .padding(end = 36.dp),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(text = message.content!!, fontSize = 16.sp)
+                }
             }
         }
         if (message.senderId == participantId) {
