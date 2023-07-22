@@ -76,8 +76,10 @@ class MainActivity : ComponentActivity() {
                         navigation(Destinations.CHATS, "chatsSection") {
                             composable(route = Destinations.CHATS) {
                                 ChatsScreen(
-                                    onUserClick = { id ->
-                                        navController.navigate("CHAT/$id")
+                                    onUserClick = { userId, chatId ->
+                                        val route = if (chatId == null) "chat/$userId"
+                                        else "chat/$userId?chatId=$chatId"
+                                        navController.navigate(route)
                                     },
                                     onBottomBarItemClick = {
                                         navController.navigate(it) {
@@ -89,13 +91,16 @@ class MainActivity : ComponentActivity() {
                                 route = Destinations.CHAT,
                                 arguments = listOf(navArgument("participantId") {
                                     type = NavType.StringType
+                                }, navArgument("chatId") {
+                                    nullable = true
+                                    defaultValue = null
+                                    type = NavType.StringType
                                 }),
                             ) {
                                 ChatScreen(onBackClick = {
                                     navController.popBackStack()
                                 })
                             }
-
                         }
                         composable(route = Destinations.CHANNELS) {
                             ChannelsScreen(onBottomBarItemClick = {
@@ -122,7 +127,7 @@ object Destinations {
     val START = "start"
     val PHONE_NUMBER = "phoneNumber"
     val CHATS = "chats"
-    val CHAT = "chat/{participantId}"
+    val CHAT = "chat/{participantId}?chatId={chatId}"
     val CHANNELS = "channels"
     val SETTINGS = "settings"
     val ADD_PROFILE = "addProfile"

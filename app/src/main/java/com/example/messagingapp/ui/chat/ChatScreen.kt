@@ -52,8 +52,7 @@ fun ChatScreen(
                     val text = if (it.firstName != null)
                         "${it.firstName} ${it.lastName}" else it.phoneNumber!!
                     Column(
-                        modifier = modifier
-                            .fillMaxWidth(),
+                        modifier = modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(horizontalArrangement = Arrangement.Center) {

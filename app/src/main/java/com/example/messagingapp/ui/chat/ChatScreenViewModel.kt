@@ -31,6 +31,7 @@ class ChatScreenViewModel @Inject constructor(
 ) : ViewModel() {
 
     val participantId: String = requireNotNull(savedStateHandle["participantId"])
+    private var chatId: String? = savedStateHandle["chatId"]
     val userId = authService.currentUser!!.uid
 
     private val currentMessageFlow = MutableStateFlow("")
@@ -67,7 +68,8 @@ class ChatScreenViewModel @Inject constructor(
         )
         currentMessageFlow.value = ""
         viewModelScope.launch {
-            chatService.saveMessage(message)
+            val res = chatService.saveMessage(message, chatId)
+            if (res != null) chatId = res
         }
     }
 
