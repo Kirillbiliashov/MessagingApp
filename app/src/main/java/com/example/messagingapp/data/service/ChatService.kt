@@ -79,31 +79,6 @@ class ChatServiceImpl @Inject constructor(
         return userProfileService.getProfileByDocumentId(userId!!)!!
     }
 
-    override fun getChatMessagesFlow(participantId: String) = callbackFlow {
-        val listener = getMessagesQuery(participantId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) cancel()
-                else trySend(snapshot.toObjects(Message::class.java))
-            }
-        awaitClose { listener.remove() }
-    }
-
-    private fun getMessagesQuery(participantId: String) = firestore
-        .collectionGroup(MESSAGES_COLL)
-        .orderBy(TIMESTAMP_FIELD)
-        .where(
-            Filter.or(
-                Filter.and(
-                    Filter.equalTo(SENDER_ID_FIELD, currUserId),
-                    Filter.equalTo(RECEIVER_ID_FIELD, participantId)
-                ),
-                Filter.and(
-                    Filter.equalTo(SENDER_ID_FIELD, participantId),
-                    Filter.equalTo(RECEIVER_ID_FIELD, currUserId)
-                )
-            )
-        )
-
     override suspend fun saveMessage(message: Message, chatId: String?): String? {
         if (chatId == null) return createChatWithMessage(message)
         addMessageToExistingDocument(message, chatId)
@@ -133,7 +108,8 @@ class ChatServiceImpl @Inject constructor(
             transaction.set(
                 chatDoc, Chat(
                     lastUpdated = System.currentTimeMillis(),
-                    lastMessage = message
+                    lastMessage = message,
+                    isGroup = false
                 )
             )
         }.await()
@@ -144,6 +120,5 @@ class ChatServiceImpl @Inject constructor(
 
 interface ChatService {
     val userChatsMapFlow: Flow<Map<User, Chat>>
-    fun getChatMessagesFlow(participantId: String): Flow<List<Message>>
     suspend fun saveMessage(message: Message, chatId: String?): String?
 }

@@ -4,6 +4,8 @@ import com.example.messagingapp.data.service.AuthenticationService
 import com.example.messagingapp.data.service.AuthenticationServiceImpl
 import com.example.messagingapp.data.service.ChatService
 import com.example.messagingapp.data.service.ChatServiceImpl
+import com.example.messagingapp.data.service.MessageService
+import com.example.messagingapp.data.service.MessageServiceImpl
 import com.example.messagingapp.data.service.UserProfileService
 import com.example.messagingapp.data.service.UserProfileServiceImpl
 import com.google.firebase.auth.FirebaseAuth
@@ -38,6 +40,12 @@ abstract class ServiceModule {
     abstract fun bindChatService(
         chatService: ChatServiceImpl
     ): ChatService
+
+    @Binds
+    @Singleton
+    abstract fun bindMessageService(
+        messageService: MessageServiceImpl
+    ): MessageService
 }
 
 

@@ -7,5 +7,7 @@ import com.google.firebase.firestore.IgnoreExtraProperties
 data class Chat(
     @DocumentId val docId: String? = null,
     val lastMessage: Message? = null,
-    val lastUpdated: Long? = null
+    val lastUpdated: Long? = null,
+    val isGroup: Boolean? = null,
+    val groupInfo: Map<String, Any>? = null
 )

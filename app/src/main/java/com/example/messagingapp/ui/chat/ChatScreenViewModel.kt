@@ -7,6 +7,7 @@ import com.example.messagingapp.data.model.firebase.Message
 import com.example.messagingapp.data.model.firebase.User
 import com.example.messagingapp.data.service.AuthenticationService
 import com.example.messagingapp.data.service.ChatService
+import com.example.messagingapp.data.service.MessageService
 import com.example.messagingapp.data.service.UserProfileService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,7 @@ class ChatScreenViewModel @Inject constructor(
     private val userProfileService: UserProfileService,
     private val chatService: ChatService,
     private val authService: AuthenticationService,
+    private val messageService: MessageService,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -39,7 +41,7 @@ class ChatScreenViewModel @Inject constructor(
 
     val uiState = combine(
         currentMessageFlow, participantFlow,
-        chatService.getChatMessagesFlow(participantId)
+        messageService.getChatMessagesFlow(participantId)
     ) { currentMessage, participant, messages ->
         UiState(currentMessage, participant, messages)
     }.stateIn(
