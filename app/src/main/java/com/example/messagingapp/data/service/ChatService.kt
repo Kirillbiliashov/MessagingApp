@@ -116,9 +116,27 @@ class ChatServiceImpl @Inject constructor(
         return chatId
     }
 
+    override suspend fun createChatGroup(chat: Chat, memberIds: MutableList<String>) {
+        memberIds.add(currUserId)
+        val chatId = firestore.collection("chats").add(chat).await().id
+        firestore.runBatch { writeBatch ->
+            memberIds
+                .forEach { memberId ->
+                writeBatch.set(
+                    firestore
+                        .collection("chats")
+                        .document(chatId)
+                        .collection("members")
+                        .document(memberId), emptyMap<String, Any>()
+                )
+            }
+        }.await()
+    }
+
 }
 
 interface ChatService {
     val userChatsMapFlow: Flow<Map<User, Chat>>
     suspend fun saveMessage(message: Message, chatId: String?): String?
+    suspend fun createChatGroup(chat: Chat, memberIds: MutableList<String>)
 }

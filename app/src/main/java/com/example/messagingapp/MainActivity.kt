@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.messagingapp.ui.addGroupChat.AddGroupChatScreen
 import com.example.messagingapp.ui.addProfile.AddProfileScreen
 import com.example.messagingapp.ui.channels.ChannelsScreen
 import com.example.messagingapp.ui.chat.ChatScreen
@@ -76,6 +77,9 @@ class MainActivity : ComponentActivity() {
                         navigation(Destinations.CHATS, "chatsSection") {
                             composable(route = Destinations.CHATS) {
                                 ChatsScreen(
+                                    onAddGroupChatClick = {
+                                        navController.navigate(Destinations.ADD_GROUP_CHAT)
+                                    },
                                     onUserClick = { userId, chatId ->
                                         val route = if (chatId == null) "chat/$userId"
                                         else "chat/$userId?chatId=$chatId"
@@ -98,6 +102,11 @@ class MainActivity : ComponentActivity() {
                                 }),
                             ) {
                                 ChatScreen(onBackClick = {
+                                    navController.popBackStack()
+                                })
+                            }
+                            composable(route = Destinations.ADD_GROUP_CHAT) {
+                                AddGroupChatScreen(onBackClick = {
                                     navController.popBackStack()
                                 })
                             }
@@ -131,4 +140,5 @@ object Destinations {
     val CHANNELS = "channels"
     val SETTINGS = "settings"
     val ADD_PROFILE = "addProfile"
+    val ADD_GROUP_CHAT = "addGroupChat"
 }

@@ -1,6 +1,7 @@
 package com.example.messagingapp.ui.chats
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,10 +17,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,14 +34,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.messagingapp.R
 import com.example.messagingapp.data.model.firebase.Chat
 import com.example.messagingapp.data.model.firebase.User
 import com.example.messagingapp.data.model.firebase.timestampToString
@@ -46,6 +52,7 @@ import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatsScreen(
+    onAddGroupChatClick: () -> Unit,
     onUserClick: (String, String?) -> Unit,
     onBottomBarItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -54,7 +61,12 @@ fun ChatsScreen(
     val uiState = viewModel.uiState.collectAsState()
     Scaffold(
         topBar = { TopAppBar(title = { Text(text = "Chats") }) },
-        bottomBar = { MessagingAppBottomNavigation(onBottomBarItemClick) }
+        bottomBar = { MessagingAppBottomNavigation(onBottomBarItemClick) },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAddGroupChatClick) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = null)
+            }
+        }
     ) { padding ->
         Column(
             modifier = modifier
@@ -126,7 +138,9 @@ fun SearchTextField(
 @Composable
 fun UserCard(
     user: User,
-    onUserClick: () -> Unit,
+    onUserClick: () -> Unit = {},
+    showCheckbox: Boolean = false,
+    onCheckboxClick: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     OutlinedCard(
@@ -156,6 +170,16 @@ fun UserCard(
                 if (user.tag != null) {
                     Text(text = "@${user.tag}")
                 }
+            }
+            if (showCheckbox) {
+                val checked = remember { mutableStateOf(false) }
+                Spacer(modifier = modifier.weight(1f))
+                Checkbox(checked = checked.value,
+                    onCheckedChange = {
+                        val newValue = !checked.value
+                        checked.value = newValue
+                        onCheckboxClick(newValue)
+                    })
             }
         }
     }
@@ -204,7 +228,7 @@ fun UserCardHeader(
     user: User, dateString: String? = null,
     modifier: Modifier = Modifier
 ) {
-    Row(modifier = modifier.fillMaxWidth()) {
+    Row {
         if (user.firstName != null) {
             Text(
                 text = "${user.firstName} ${user.lastName}",
