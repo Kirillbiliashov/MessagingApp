@@ -57,22 +57,29 @@ class ChatServiceImpl @Inject constructor(
         .where(
             Filter.or(
                 Filter.equalTo("lastMessage.senderId", currUserId),
-                Filter.equalTo("lastMessage.receiverId", currUserId)
+                Filter.equalTo("lastMessage.receiverId", currUserId),
+                Filter.and(
+                    Filter.equalTo("isGroup", true),
+                    Filter.equalTo("groupInfo.createdBy", currUserId)
+                )
             )
         )
 
     private suspend fun getChatUserMap(chats: List<Chat>) = coroutineScope {
-        awaitAll(
-            *chats
-                .map {
-                    async {
-                        getChatParticipant(it.lastMessage!!)
-                    }
-                }.toTypedArray()
-        ).zip(chats).toMap()
+        chats.zip(
+            awaitAll(
+                *chats
+                    .map {
+                        async {
+                            getChatParticipant(it.lastMessage)
+                        }
+                    }.toTypedArray()
+            )
+        ).toMap()
     }
 
-    private suspend fun getChatParticipant(message: Message): User {
+    private suspend fun getChatParticipant(message: Message?): User? {
+        if (message == null) return null
         val senderId = message.senderId
         val receiverId = message.receiverId
         val userId = if (currUserId == senderId) receiverId else senderId
@@ -117,26 +124,30 @@ class ChatServiceImpl @Inject constructor(
     }
 
     override suspend fun createChatGroup(chat: Chat, memberIds: MutableList<String>) {
+        chat.groupInfo!!["createdBy"] = currUserId
         memberIds.add(currUserId)
-        val chatId = firestore.collection("chats").add(chat).await().id
+        val chatId = firestore
+            .collection(CHATS_COLL)
+            .add(chat.copy(lastUpdated = System.currentTimeMillis()))
+            .await().id
         firestore.runBatch { writeBatch ->
             memberIds
                 .forEach { memberId ->
-                writeBatch.set(
-                    firestore
-                        .collection("chats")
-                        .document(chatId)
-                        .collection("members")
-                        .document(memberId), emptyMap<String, Any>()
-                )
-            }
+                    writeBatch.set(
+                        firestore
+                            .collection(CHATS_COLL)
+                            .document(chatId)
+                            .collection("members")
+                            .document(memberId), emptyMap<String, Any>()
+                    )
+                }
         }.await()
     }
 
 }
 
 interface ChatService {
-    val userChatsMapFlow: Flow<Map<User, Chat>>
+    val userChatsMapFlow: Flow<Map<Chat, User?>>
     suspend fun saveMessage(message: Message, chatId: String?): String?
     suspend fun createChatGroup(chat: Chat, memberIds: MutableList<String>)
 }

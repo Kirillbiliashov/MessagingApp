@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.data.model.firebase.Chat
+import com.example.messagingapp.data.model.firebase.Message
 import com.example.messagingapp.data.model.firebase.User
 import com.example.messagingapp.data.model.firebase.timestampToString
 import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
@@ -57,8 +58,6 @@ fun ChatsScreen(
     onBottomBarItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val viewModel: ChatsScreenViewModel = hiltViewModel()
-    val uiState = viewModel.uiState.collectAsState()
     Scaffold(
         topBar = { TopAppBar(title = { Text(text = "Chats") }) },
         bottomBar = { MessagingAppBottomNavigation(onBottomBarItemClick) },
@@ -74,33 +73,44 @@ fun ChatsScreen(
                 .padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            SearchTextField(
-                value = uiState.value.searchQuery,
-                onValueChange = viewModel::updateSearchQuery,
-                onClearIconClick = viewModel::clearSearchTextField
-            )
-            Spacer(modifier = modifier.height(8.dp))
-            if (uiState.value.users.isNotEmpty()) {
-                LazyColumn {
-                    items(items = uiState.value.users) { user ->
-                        UserCard(user = user, onUserClick = {
-                            viewModel.clearSearchTextField()
-                            onUserClick(user.docId!!, null)
-                        })
-                    }
-                }
-            } else {
-                LazyColumn {
-                    items(items = uiState.value.chatsMap.entries.toList()) { (user, chat) ->
-                        ChatCard(chat = chat, participant = user, onChatClick = {
-                            onUserClick(user.docId!!, chat.docId)
-                        })
-                    }
-                }
+            ChatsScreenContent(onUserClick)
+        }
+    }
+}
+
+@Composable
+fun ChatsScreenContent(
+    onUserClick: (String, String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val viewModel: ChatsScreenViewModel = hiltViewModel()
+    val uiState = viewModel.uiState.collectAsState()
+    SearchTextField(
+        value = uiState.value.searchQuery,
+        onValueChange = viewModel::updateSearchQuery,
+        onClearIconClick = viewModel::clearSearchTextField
+    )
+    Spacer(modifier = modifier.height(8.dp))
+    val users = uiState.value.users
+    if (users.isNotEmpty()) {
+        LazyColumn {
+            items(items = users) { user ->
+                UserCard(user = user, onUserClick = {
+                    viewModel.clearSearchTextField()
+                    onUserClick(user.docId!!, null)
+                })
+            }
+        }
+    } else {
+        val chatsMapEntries = uiState.value.chatsMap.entries
+        LazyColumn {
+            items(items = chatsMapEntries.toList()) { (chat, user) ->
+                ChatCard(chat = chat, participant = user, onChatClick = {
+                    onUserClick(user!!.docId!!, chat.docId)
+                })
             }
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -139,8 +149,7 @@ fun SearchTextField(
 fun UserCard(
     user: User,
     onUserClick: () -> Unit = {},
-    showCheckbox: Boolean = false,
-    onCheckboxClick: (Boolean) -> Unit = {},
+    trailingComponent: @Composable () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     OutlinedCard(
@@ -171,23 +180,16 @@ fun UserCard(
                     Text(text = "@${user.tag}")
                 }
             }
-            if (showCheckbox) {
-                val checked = remember { mutableStateOf(false) }
-                Spacer(modifier = modifier.weight(1f))
-                Checkbox(checked = checked.value,
-                    onCheckedChange = {
-                        val newValue = !checked.value
-                        checked.value = newValue
-                        onCheckboxClick(newValue)
-                    })
-            }
+            Spacer(modifier = modifier.weight(1f))
+            trailingComponent()
         }
     }
 }
 
 @Composable
 fun ChatCard(
-    chat: Chat, participant: User,
+    chat: Chat,
+    participant: User?,
     onChatClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -209,18 +211,49 @@ fun ChatCard(
             )
             Spacer(modifier = modifier.width(16.dp))
             Column(modifier = modifier.fillMaxHeight()) {
-                UserCardHeader(
-                    user = participant,
-                    dateString = chat.lastMessage!!.timestampToString("HH:mm")
-                )
-                Text(
-                    text = chat.lastMessage.content ?: "",
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                if (participant != null) {
+                    ChatCardContent(
+                        lastMessage = chat.lastMessage!!,
+                        participant = participant
+                    )
+                } else {
+                    EmptyChatCardContent(
+                        chatName = chat.groupInfo!!["name"].toString()
+                    )
+                }
+
             }
         }
     }
+}
+
+@Composable
+fun ChatCardContent(
+    lastMessage: Message, participant: User,
+    modifier: Modifier = Modifier
+) {
+    UserCardHeader(
+        user = participant,
+        dateString = lastMessage.timestampToString("HH:mm")
+    )
+    Text(
+        text = lastMessage.content ?: "",
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
+}
+
+@Composable
+fun EmptyChatCardContent(
+    chatName: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = chatName,
+        fontWeight = FontWeight.W500,
+        style = MaterialTheme.typography.titleMedium
+    )
+    Text(text = "No messages here yet")
 }
 
 @Composable

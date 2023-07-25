@@ -81,10 +81,21 @@ class AddGroupChatScreenViewModel @Inject constructor(
         }
     }
 
+    fun removeSelectedMember(user: User) {
+        val groupChatMembers = _uiState.value.groupChatMembers
+        val selectedMembers = _uiState.value.selectedMembers
+        _uiState.update {
+            it.copy(
+                groupChatMembers = groupChatMembers - user,
+                selectedMembers = selectedMembers - user
+            )
+        }
+    }
+
     fun createNewChatGroup() {
         val chatGroup = Chat(
             isGroup = true,
-            groupInfo = mapOf(
+            groupInfo = mutableMapOf(
                 "name" to _uiState.value.name,
                 "tag" to _uiState.value.tag,
                 "isPrivate" to _uiState.value.isPrivate

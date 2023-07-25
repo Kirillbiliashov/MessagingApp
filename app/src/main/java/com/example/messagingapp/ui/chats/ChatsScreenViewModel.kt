@@ -17,7 +17,7 @@ import javax.inject.Inject
 data class UiState(
     val searchQuery: String? = null,
     val users: List<User> = listOf(),
-    val chatsMap: Map<User, Chat> = mapOf()
+    val chatsMap: Map<Chat, User?> = mapOf()
 )
 
 @HiltViewModel

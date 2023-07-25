@@ -8,6 +8,7 @@ data class Chat(
     @DocumentId val docId: String? = null,
     val lastMessage: Message? = null,
     val lastUpdated: Long? = null,
+    @field:JvmField
     val isGroup: Boolean? = null,
-    val groupInfo: Map<String, Any>? = null
+    val groupInfo: MutableMap<String, Any>? = null
 )
