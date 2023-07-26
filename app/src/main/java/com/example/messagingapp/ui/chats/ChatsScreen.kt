@@ -45,6 +45,7 @@ import com.example.messagingapp.data.model.firebase.User
 import com.example.messagingapp.data.model.firebase.headerName
 import com.example.messagingapp.data.model.firebase.timestampToString
 import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
+import com.example.messagingapp.utils.Helpers.asTimestampToString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -214,9 +215,7 @@ fun ChatCard(
                         participant = participant
                     )
                 } else {
-                    GroupChatCardContent(
-                        chat = chat
-                    )
+                    GroupChatCardContent(chat = chat)
                 }
 
             }
@@ -245,11 +244,16 @@ fun GroupChatCardContent(
     chat: Chat,
     modifier: Modifier = Modifier
 ) {
-    Text(
-        text = chat.groupInfo!!["name"].toString(),
-        fontWeight = FontWeight.W500,
-        style = MaterialTheme.typography.titleMedium
-    )
+    val dateString = chat.lastUpdated!!.asTimestampToString("HH:mm")
+    Row {
+        Text(
+            text = chat.groupInfo!!["name"].toString(),
+            fontWeight = FontWeight.W500,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = modifier.weight(1f))
+        Text(text = dateString)
+    }
     Text(text = chat.lastMessage!!.content!!)
 }
 

@@ -105,12 +105,15 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 })
                             }
-                            composable(route = Destinations.GROUP_CHAT,
+                            composable(
+                                route = Destinations.GROUP_CHAT,
                                 arguments = listOf(navArgument("chatId") {
                                     type = NavType.StringType
                                 })
                             ) {
-                                GroupChatScreen()
+                                GroupChatScreen(onBackClick = {
+                                    navController.popBackStack()
+                                })
                             }
                             composable(route = Destinations.ADD_GROUP_CHAT) {
                                 AddGroupChatScreen(onBackClick = {

@@ -1,7 +1,6 @@
 package com.example.messagingapp.ui.groupChat
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,16 +28,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.messagingapp.data.model.firebase.Chat
 import com.example.messagingapp.data.model.firebase.Message
 import com.example.messagingapp.data.model.firebase.headerName
 import com.example.messagingapp.data.model.firebase.timestampToString
-import com.example.messagingapp.ui.chat.MessageRow
 import com.example.messagingapp.ui.components.MessageTextField
 import com.example.messagingapp.utils.Helpers
 import com.example.messagingapp.utils.Helpers.asTimestampToString
@@ -46,38 +44,21 @@ import com.google.firebase.appcheck.interop.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupChatScreen(modifier: Modifier = Modifier) {
+fun GroupChatScreen(
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val viewModel: GroupChatScreenViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsState()
     val members = uiState.value.members
     Scaffold(topBar = {
         TopAppBar(title = {
-            Row(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .clickable { println("clicked") },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val chat = uiState.value.chat
-                if (chat != null) {
-                    Column {
-                        Text(text = chat.groupInfo!!["name"].toString())
-                        Text(
-                            text = "${members.count()} members",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.W300
-                        )
-                    }
-                    Image(
-                        painter = painterResource(R.drawable.googleg_disabled_color_18),
-                        contentDescription = null,
-                        modifier = modifier.size(36.dp)
-                    )
-                }
-            }
+            GroupChatScreenTopBar(
+                chat = uiState.value.chat,
+                membersCount = members.count()
+            )
         }, navigationIcon = {
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = onBackClick) {
                 Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
             }
         })
@@ -109,12 +90,11 @@ fun GroupChatScreen(modifier: Modifier = Modifier) {
                 LazyColumn {
                     items(items = messages) { message ->
                         if (members.isNotEmpty()) {
-                            val user = members.first { it.docId == message.senderId }
+                            val sender = members.first { it.docId == message.senderId }
                             GroupMessageRow(
                                 message = message,
                                 userId = viewModel.userId,
-                                participantId = message.receiverId!!,
-                                username = user.headerName()
+                                username = sender.headerName()
                             )
                         }
                     }
@@ -132,14 +112,13 @@ fun GroupChatScreen(modifier: Modifier = Modifier) {
 fun GroupMessageRow(
     message: Message,
     userId: String,
-    participantId: String,
     username: String,
     modifier: Modifier = Modifier
 ) {
-    val userRowModifier = if (message.senderId == userId)
+    val isCurrUserSender = message.senderId == userId
+    val userRowModifier = if (isCurrUserSender)
         modifier.padding(start = 24.dp, end = 8.dp)
     else modifier.padding(start = 8.dp, end = 24.dp)
-    val isCurrUserSender = message.senderId == userId
     val contentTopPadding = if (isCurrUserSender) 4.dp else 16.dp
     Row(modifier = userRowModifier.fillMaxWidth()) {
         if (isCurrUserSender) {
@@ -168,8 +147,38 @@ fun GroupMessageRow(
                 }
             }
         }
-        if (message.senderId == participantId) {
+        if (!isCurrUserSender) {
             Spacer(modifier = modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+fun GroupChatScreenTopBar(
+    chat: Chat?,
+    membersCount: Int,
+    modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { println("clicked") },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (chat != null) {
+            Column {
+                Text(text = chat.groupInfo!!["name"].toString())
+                Text(
+                    text = "$membersCount members",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.W300
+                )
+            }
+            Image(
+                painter = painterResource(R.drawable.googleg_disabled_color_18),
+                contentDescription = null,
+                modifier = modifier.size(36.dp)
+            )
         }
     }
 }

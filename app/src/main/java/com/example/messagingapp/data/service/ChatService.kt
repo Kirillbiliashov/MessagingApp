@@ -70,17 +70,20 @@ class ChatServiceImpl @Inject constructor(
         chats.zip(
             awaitAll(
                 *chats
-                    .map {
+                    .map { chat ->
                         async {
-                            getChatParticipant(it.lastMessage)
+                            getChatParticipant(chat.lastMessage, chat.isGroup!!)
                         }
                     }.toTypedArray()
             )
         ).toMap()
     }
 
-    private suspend fun getChatParticipant(message: Message?): User? {
-        if (message == null) return null
+    private suspend fun getChatParticipant(
+        message: Message?,
+        isGroup: Boolean
+    ): User? {
+        if (message == null || isGroup) return null
         val senderId = message.senderId
         val receiverId = message.receiverId
         val userId = if (currUserId == senderId) receiverId else senderId

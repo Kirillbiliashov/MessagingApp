@@ -32,6 +32,7 @@ class GroupChatScreenViewModel @Inject constructor(
     private val authService: AuthenticationService,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
     private var chatId: String = requireNotNull(savedStateHandle["chatId"])
     val userId = authService.currentUser!!.uid
 
@@ -45,9 +46,7 @@ class GroupChatScreenViewModel @Inject constructor(
         groupChatFlow,
         currentMessageFlow
     ) { members, messages, chat, currentMessage ->
-        UiState(
-            members, messages, chat, currentMessage
-        )
+        UiState(members, messages, chat, currentMessage)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000L),
@@ -62,11 +61,6 @@ class GroupChatScreenViewModel @Inject constructor(
             groupChatFlow.value = chatService.getByDocId(chatId)
         }
     }
-
-    private fun mapUsersToMessages(users: List<User>, messages: List<Message>) =
-        messages.associateWith { message ->
-            users.first { user -> user.docId == message.senderId }
-        }
 
     fun updateCurrentMessageTextField(newValue: String) {
         currentMessageFlow.value = newValue
