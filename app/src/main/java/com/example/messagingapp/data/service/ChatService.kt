@@ -7,9 +7,6 @@ import com.example.messagingapp.utils.Constants.CHATS_COLL
 import com.example.messagingapp.utils.Constants.LAST_MESSAGE_FIELD
 import com.example.messagingapp.utils.Constants.LAST_UPDATED_FIELD
 import com.example.messagingapp.utils.Constants.MESSAGES_COLL
-import com.example.messagingapp.utils.Constants.RECEIVER_ID_FIELD
-import com.example.messagingapp.utils.Constants.SENDER_ID_FIELD
-import com.example.messagingapp.utils.Constants.TIMESTAMP_FIELD
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
@@ -35,6 +32,7 @@ class ChatServiceImpl @Inject constructor(
 ) : ChatService {
 
     private val currUserId = auth.currentUser!!.uid
+    private val phoneNumber = auth.currentUser!!.phoneNumber
 
     override val userChatsMapFlow = callbackFlow {
         val listener = userChatsQuery
@@ -61,7 +59,7 @@ class ChatServiceImpl @Inject constructor(
                 Filter.equalTo("lastMessage.receiverId", currUserId),
                 Filter.and(
                     Filter.equalTo("isGroup", true),
-                    Filter.equalTo("groupInfo.createdBy", currUserId)
+                    Filter.arrayContains("groupInfo.members", phoneNumber)
                 )
             )
         )
@@ -131,45 +129,19 @@ class ChatServiceImpl @Inject constructor(
         return chatId
     }
 
-    override suspend fun createChatGroup(chat: Chat, memberIds: MutableList<String>) {
-        chat.groupInfo!!["createdBy"] = currUserId
-        memberIds.add(currUserId)
-        val chatId = firestore
+    override suspend fun createChatGroup(chat: Chat) {
+        val groupInfo = chat.groupInfo!!
+        firestore
             .collection(CHATS_COLL)
-            .add(chat.copy(lastUpdated = System.currentTimeMillis()))
-            .await().id
-        firestore.runBatch { writeBatch ->
-            memberIds
-                .forEach { memberId ->
-                    writeBatch.set(
-                        firestore
-                            .collection(CHATS_COLL)
-                            .document(chatId)
-                            .collection("members")
-                            .document(memberId), emptyMap<String, Any>()
-                    )
-                }
-        }.await()
+            .add(
+                chat.copy(lastUpdated = System.currentTimeMillis(),
+                groupInfo = groupInfo.copy(
+                    createdBy = currUserId,
+                    members = groupInfo.members!! + phoneNumber!!
+                ))
+            )
+            .await()
     }
-
-    override suspend fun getGroupChatMembers(groupChatId: String): List<User> =
-        awaitAll(
-            *firestore.collection(CHATS_COLL)
-                .document(groupChatId)
-                .collection("members")
-                .get()
-                .await()
-                .toObjects(User::class.java)
-                .map {
-                    firestore
-                        .collection("users")
-                        .document(it.docId!!)
-                        .get()
-                        .asDeferred()
-                }.toTypedArray()
-        ).map { it.toObject(User::class.java)!! }
-
-
 
     override suspend fun getByDocId(chatId: String) = firestore
         .collection(CHATS_COLL)
@@ -183,7 +155,6 @@ class ChatServiceImpl @Inject constructor(
 interface ChatService {
     val userChatsMapFlow: Flow<Map<Chat, User?>>
     suspend fun saveMessage(message: Message, chatId: String?): String?
-    suspend fun createChatGroup(chat: Chat, memberIds: MutableList<String>)
-    suspend fun getGroupChatMembers(groupChatId: String): List<User>
+    suspend fun createChatGroup(chat: Chat)
     suspend fun getByDocId(chatId: String): Chat
 }

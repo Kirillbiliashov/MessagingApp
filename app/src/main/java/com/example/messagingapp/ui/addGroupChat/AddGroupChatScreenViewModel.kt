@@ -3,6 +3,7 @@ package com.example.messagingapp.ui.addGroupChat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.messagingapp.data.model.firebase.Chat
+import com.example.messagingapp.data.model.firebase.GroupInfo
 import com.example.messagingapp.data.model.firebase.User
 import com.example.messagingapp.data.service.ChatService
 import com.example.messagingapp.data.service.UserProfileService
@@ -93,20 +94,18 @@ class AddGroupChatScreenViewModel @Inject constructor(
     }
 
     fun createNewChatGroup() {
-        val chatGroup = Chat(
+        val groupChat = Chat(
             isGroup = true,
-            groupInfo = mutableMapOf(
-                "name" to _uiState.value.name,
-                "tag" to _uiState.value.tag,
-                "isPrivate" to _uiState.value.isPrivate
+            groupInfo = GroupInfo(
+                name = _uiState.value.name,
+                tag = _uiState.value.tag,
+                isPrivate = _uiState.value.isPrivate,
+                members = _uiState.value.groupChatMembers.map { it.phoneNumber!! }
             )
         )
         viewModelScope.launch {
-            chatService.createChatGroup(chatGroup,
-                _uiState.value.groupChatMembers.map { it.docId!! }.toMutableList()
-            )
+            chatService.createChatGroup(groupChat)
         }
     }
-
 
 }

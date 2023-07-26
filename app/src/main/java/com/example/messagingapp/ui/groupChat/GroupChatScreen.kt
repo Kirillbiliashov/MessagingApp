@@ -167,7 +167,7 @@ fun GroupChatScreenTopBar(
     ) {
         if (chat != null) {
             Column {
-                Text(text = chat.groupInfo!!["name"].toString())
+                Text(text = chat.groupInfo!!.name!!)
                 Text(
                     text = "$membersCount members",
                     style = MaterialTheme.typography.bodyMedium,

@@ -9,6 +9,7 @@ import com.example.messagingapp.data.model.firebase.User
 import com.example.messagingapp.data.service.AuthenticationService
 import com.example.messagingapp.data.service.ChatService
 import com.example.messagingapp.data.service.MessageService
+import com.example.messagingapp.data.service.UserProfileService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,6 +31,7 @@ class GroupChatScreenViewModel @Inject constructor(
     private val chatService: ChatService,
     private val messageService: MessageService,
     private val authService: AuthenticationService,
+    private val userProfileService: UserProfileService,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -55,10 +57,10 @@ class GroupChatScreenViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            chatParticipantsFlow.value = chatService.getGroupChatMembers(chatId)
-        }
-        viewModelScope.launch {
-            groupChatFlow.value = chatService.getByDocId(chatId)
+            val chat = chatService.getByDocId(chatId)
+            groupChatFlow.value = chat
+            chatParticipantsFlow.value =
+                userProfileService.getByPhoneNumbers(chat.groupInfo!!.members!!)
         }
     }
 

@@ -7,6 +7,7 @@ import com.example.messagingapp.utils.Constants.TAG_FIELD
 import com.example.messagingapp.utils.Constants.USERS_COLL
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -46,6 +47,14 @@ class UserProfileServiceImpl @Inject constructor(
                 .await()
                 .toObjects(User::class.java)
 
+    override suspend fun getByPhoneNumbers(phoneNumbers: List<String>): List<User> =
+        firestore
+            .collection(USERS_COLL)
+            .whereIn("phoneNumber", phoneNumbers)
+            .get()
+            .await()
+            .toObjects(User::class.java)
+
     override suspend fun getProfileByDocumentId(docId: String): User? = firestore
         .collection(USERS_COLL)
         .document(docId)
@@ -60,6 +69,7 @@ interface UserProfileService {
     suspend fun saveProfile(user: User)
 
     suspend fun getProfilesByQuery(query: String): List<User>
+    suspend fun getByPhoneNumbers(phoneNumbers: List<String>): List<User>
 
     suspend fun getProfileByDocumentId(docId: String): User?
 }

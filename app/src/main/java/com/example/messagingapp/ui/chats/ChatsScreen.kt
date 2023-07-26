@@ -247,14 +247,16 @@ fun GroupChatCardContent(
     val dateString = chat.lastUpdated!!.asTimestampToString("HH:mm")
     Row {
         Text(
-            text = chat.groupInfo!!["name"].toString(),
+            text = chat.groupInfo!!.name!!,
             fontWeight = FontWeight.W500,
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = modifier.weight(1f))
         Text(text = dateString)
     }
-    Text(text = chat.lastMessage!!.content!!)
+    val messageContent = if (chat.lastMessage != null) chat.lastMessage.content!!
+    else "No messages here yet"
+    Text(text = messageContent)
 }
 
 @Composable

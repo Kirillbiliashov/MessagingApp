@@ -10,5 +10,5 @@ data class Chat(
     val lastUpdated: Long? = null,
     @field:JvmField
     val isGroup: Boolean? = null,
-    val groupInfo: MutableMap<String, Any>? = null
+    val groupInfo: GroupInfo? = null
 )
