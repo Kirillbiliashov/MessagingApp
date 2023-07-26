@@ -22,6 +22,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.asDeferred
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -83,7 +84,7 @@ class ChatServiceImpl @Inject constructor(
         val senderId = message.senderId
         val receiverId = message.receiverId
         val userId = if (currUserId == senderId) receiverId else senderId
-        return userProfileService.getProfileByDocumentId(userId!!)!!
+        return userProfileService.getProfileByDocumentId(userId!!)
     }
 
     override suspend fun saveMessage(message: Message, chatId: String?): String? {
@@ -97,9 +98,13 @@ class ChatServiceImpl @Inject constructor(
         val messagesColl = chatDoc.collection(MESSAGES_COLL)
         val messageId = messagesColl.document().id
         firestore.runBatch { writeBatch ->
-            writeBatch.set(messagesColl.document(messageId), message)
-            writeBatch.update(chatDoc, LAST_MESSAGE_FIELD, message)
             val currTime = System.currentTimeMillis()
+            val messageCopy = message.copy(
+                timestamp = currTime,
+                senderId = currUserId
+            )
+            writeBatch.set(messagesColl.document(messageId), messageCopy)
+            writeBatch.update(chatDoc, LAST_MESSAGE_FIELD, messageCopy)
             writeBatch.update(chatDoc, LAST_UPDATED_FIELD, currTime)
         }.await()
     }
@@ -144,10 +149,38 @@ class ChatServiceImpl @Inject constructor(
         }.await()
     }
 
+    override suspend fun getGroupChatMembers(groupChatId: String): List<User> =
+        awaitAll(
+            *firestore.collection(CHATS_COLL)
+                .document(groupChatId)
+                .collection("members")
+                .get()
+                .await()
+                .toObjects(User::class.java)
+                .map {
+                    firestore
+                        .collection("users")
+                        .document(it.docId!!)
+                        .get()
+                        .asDeferred()
+                }.toTypedArray()
+        ).map { it.toObject(User::class.java)!! }
+
+
+
+    override suspend fun getByDocId(chatId: String) = firestore
+        .collection(CHATS_COLL)
+        .document(chatId)
+        .get()
+        .await()
+        .toObject(Chat::class.java)!!
+
 }
 
 interface ChatService {
     val userChatsMapFlow: Flow<Map<Chat, User?>>
     suspend fun saveMessage(message: Message, chatId: String?): String?
     suspend fun createChatGroup(chat: Chat, memberIds: MutableList<String>)
+    suspend fun getGroupChatMembers(groupChatId: String): List<User>
+    suspend fun getByDocId(chatId: String): Chat
 }

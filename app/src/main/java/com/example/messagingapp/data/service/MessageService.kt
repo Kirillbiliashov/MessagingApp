@@ -29,6 +29,19 @@ class MessageServiceImpl @Inject constructor(
         awaitClose { listener.remove() }
     }
 
+    override fun getGroupChatMessagesFlow(groupChatId: String) = callbackFlow {
+        val listener = firestore
+            .collection("chats")
+            .document(groupChatId)
+            .collection("messages")
+            .orderBy(Constants.TIMESTAMP_FIELD)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) cancel()
+                else trySend(snapshot.toObjects(Message::class.java))
+            }
+        awaitClose { listener.remove() }
+    }
+
     private fun getMessagesQuery(participantId: String) = firestore
         .collectionGroup(Constants.MESSAGES_COLL)
         .orderBy(Constants.TIMESTAMP_FIELD)
@@ -49,4 +62,5 @@ class MessageServiceImpl @Inject constructor(
 
 interface MessageService {
     fun getChatMessagesFlow(participantId: String): Flow<List<Message>>
+    fun getGroupChatMessagesFlow(groupChatId: String): Flow<List<Message>>
 }

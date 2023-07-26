@@ -12,3 +12,7 @@ data class User(
     val description: String? = null,
     val tag: String? = null,
 )
+
+
+fun User.headerName(): String = if (firstName != null) "$firstName $lastName"
+else phoneNumber!!

@@ -1,31 +1,27 @@
-package com.example.messagingapp.ui.chat
+package com.example.messagingapp.ui.groupChat
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -35,12 +31,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.data.model.firebase.Message
-import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.data.model.firebase.headerName
 import com.example.messagingapp.data.model.firebase.timestampToString
+import com.example.messagingapp.ui.chat.MessageRow
 import com.example.messagingapp.ui.components.MessageTextField
 import com.example.messagingapp.utils.Helpers
 import com.example.messagingapp.utils.Helpers.asTimestampToString
@@ -48,25 +46,41 @@ import com.google.firebase.appcheck.interop.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(
-    onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val viewModel: ChatScreenViewModel = hiltViewModel()
+fun GroupChatScreen(modifier: Modifier = Modifier) {
+    val viewModel: GroupChatScreenViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsState()
+    val members = uiState.value.members
     Scaffold(topBar = {
-        TopAppBar(
-            title = {
-                ChatScreenTopBarContent(participant = uiState.value.participant)
-            },
-            navigationIcon = {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = null
+        TopAppBar(title = {
+            Row(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .clickable { println("clicked") },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val chat = uiState.value.chat
+                if (chat != null) {
+                    Column {
+                        Text(text = chat.groupInfo!!["name"].toString())
+                        Text(
+                            text = "${members.count()} members",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.W300
+                        )
+                    }
+                    Image(
+                        painter = painterResource(R.drawable.googleg_disabled_color_18),
+                        contentDescription = null,
+                        modifier = modifier.size(36.dp)
                     )
                 }
-            })
+            }
+        }, navigationIcon = {
+            IconButton(onClick = { /*TODO*/ }) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+            }
+        })
     }) { padding ->
         Column(
             modifier = modifier
@@ -74,6 +88,7 @@ fun ChatScreen(
                 .padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             val messagesByDateMap = uiState.value.messages.groupBy {
                 it.timestampToString("MM.dd.yyyy")
             }
@@ -93,58 +108,41 @@ fun ChatScreen(
                 }
                 LazyColumn {
                     items(items = messages) { message ->
-                        MessageRow(
-                            message = message,
-                            userId = viewModel.userId,
-                            participantId = viewModel.participantId
-                        )
+                        if (members.isNotEmpty()) {
+                            val user = members.first { it.docId == message.senderId }
+                            GroupMessageRow(
+                                message = message,
+                                userId = viewModel.userId,
+                                participantId = message.receiverId!!,
+                                username = user.headerName()
+                            )
+                        }
                     }
                 }
             }
             Spacer(modifier = modifier.weight(1f))
-            MessageTextField(
-                value = uiState.value.currentMessage,
-                onValueChange = viewModel::updateMessageTextField,
-                onSendIconClick = viewModel::sendMessage
-            )
+            MessageTextField(value = uiState.value.currentMessage,
+                onValueChange = viewModel::updateCurrentMessageTextField,
+                onSendIconClick = viewModel::sendMessage)
         }
     }
 }
 
 @Composable
-fun ChatScreenTopBarContent(participant: User?, modifier: Modifier = Modifier) {
-    participant?.let {
-        val text = if (it.firstName != null)
-            "${it.firstName} ${it.lastName}" else it.phoneNumber!!
-        Column(
-            modifier = modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(horizontalArrangement = Arrangement.Center) {
-                Text(text = text)
-                Spacer(modifier = modifier.weight(1f))
-                Image(
-                    painter = painterResource(R.drawable.googleg_disabled_color_18),
-                    contentDescription = null,
-                    modifier = modifier.size(36.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun MessageRow(
+fun GroupMessageRow(
     message: Message,
     userId: String,
     participantId: String,
+    username: String,
     modifier: Modifier = Modifier
 ) {
     val userRowModifier = if (message.senderId == userId)
         modifier.padding(start = 24.dp, end = 8.dp)
     else modifier.padding(start = 8.dp, end = 24.dp)
+    val isCurrUserSender = message.senderId == userId
+    val contentTopPadding = if (isCurrUserSender) 4.dp else 16.dp
     Row(modifier = userRowModifier.fillMaxWidth()) {
-        if (message.senderId == userId) {
+        if (isCurrUserSender) {
             Spacer(modifier = modifier.weight(1f))
         }
         Card(modifier = modifier.padding(4.dp)) {
@@ -152,17 +150,21 @@ fun MessageRow(
                 Column(
                     modifier = modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 8.dp, bottom = 4.dp)
+                        .padding(end = 8.dp, bottom = 4.dp, start = 4.dp)
                 ) {
                     Text(text = message.timestampToString("HH:mm"), fontSize = 12.sp)
                 }
                 Column(
                     modifier = modifier
-                        .padding(8.dp)
-                        .padding(end = 36.dp),
-                    horizontalAlignment = Alignment.End
+                        .padding(top = contentTopPadding,
+                            bottom = 4.dp, end = 44.dp, start = 8.dp)
                 ) {
                     Text(text = message.content!!, fontSize = 16.sp)
+                }
+                if (!isCurrUserSender) {
+                    Column(modifier = modifier.padding(start = 8.dp)) {
+                        Text(text = username)
+                    }
                 }
             }
         }

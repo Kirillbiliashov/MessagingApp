@@ -1,7 +1,6 @@
 package com.example.messagingapp.ui.chats
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,7 +20,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -34,11 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.data.model.firebase.Chat
 import com.example.messagingapp.data.model.firebase.Message
 import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.data.model.firebase.headerName
 import com.example.messagingapp.data.model.firebase.timestampToString
 import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
 
@@ -54,7 +50,7 @@ import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
 @Composable
 fun ChatsScreen(
     onAddGroupChatClick: () -> Unit,
-    onUserClick: (String, String?) -> Unit,
+    onChatClick: (String?, String?) -> Unit,
     onBottomBarItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -73,14 +69,14 @@ fun ChatsScreen(
                 .padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ChatsScreenContent(onUserClick)
+            ChatsScreenContent(onChatClick)
         }
     }
 }
 
 @Composable
 fun ChatsScreenContent(
-    onUserClick: (String, String?) -> Unit,
+    onChatClick: (String?, String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val viewModel: ChatsScreenViewModel = hiltViewModel()
@@ -97,7 +93,7 @@ fun ChatsScreenContent(
             items(items = users) { user ->
                 UserCard(user = user, onUserClick = {
                     viewModel.clearSearchTextField()
-                    onUserClick(user.docId!!, null)
+                    onChatClick(user.docId!!, null)
                 })
             }
         }
@@ -106,7 +102,8 @@ fun ChatsScreenContent(
         LazyColumn {
             items(items = chatsMapEntries.toList()) { (chat, user) ->
                 ChatCard(chat = chat, participant = user, onChatClick = {
-                    onUserClick(user!!.docId!!, chat.docId)
+                    if (chat.isGroup!!) onChatClick(null, chat.docId)
+                    else onChatClick(user!!.docId!!, chat.docId)
                 })
             }
         }
@@ -212,13 +209,13 @@ fun ChatCard(
             Spacer(modifier = modifier.width(16.dp))
             Column(modifier = modifier.fillMaxHeight()) {
                 if (participant != null) {
-                    ChatCardContent(
+                    UserChatCardContent(
                         lastMessage = chat.lastMessage!!,
                         participant = participant
                     )
                 } else {
-                    EmptyChatCardContent(
-                        chatName = chat.groupInfo!!["name"].toString()
+                    GroupChatCardContent(
+                        chat = chat
                     )
                 }
 
@@ -228,7 +225,7 @@ fun ChatCard(
 }
 
 @Composable
-fun ChatCardContent(
+fun UserChatCardContent(
     lastMessage: Message, participant: User,
     modifier: Modifier = Modifier
 ) {
@@ -244,16 +241,16 @@ fun ChatCardContent(
 }
 
 @Composable
-fun EmptyChatCardContent(
-    chatName: String,
+fun GroupChatCardContent(
+    chat: Chat,
     modifier: Modifier = Modifier
 ) {
     Text(
-        text = chatName,
+        text = chat.groupInfo!!["name"].toString(),
         fontWeight = FontWeight.W500,
         style = MaterialTheme.typography.titleMedium
     )
-    Text(text = "No messages here yet")
+    Text(text = chat.lastMessage!!.content!!)
 }
 
 @Composable
@@ -262,19 +259,11 @@ fun UserCardHeader(
     modifier: Modifier = Modifier
 ) {
     Row {
-        if (user.firstName != null) {
-            Text(
-                text = "${user.firstName} ${user.lastName}",
-                fontWeight = FontWeight.W500,
-                style = MaterialTheme.typography.titleMedium
-            )
-        } else {
-            Text(
-                text = user.phoneNumber!!,
-                fontWeight = FontWeight.W600,
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
+        Text(
+            text = user.headerName(),
+            fontWeight = FontWeight.W500,
+            style = MaterialTheme.typography.titleMedium
+        )
         if (dateString != null) {
             Spacer(modifier = modifier.weight(1f))
             Text(text = dateString)

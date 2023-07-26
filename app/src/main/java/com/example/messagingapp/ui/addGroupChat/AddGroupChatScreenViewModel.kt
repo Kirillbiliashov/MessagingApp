@@ -103,7 +103,8 @@ class AddGroupChatScreenViewModel @Inject constructor(
         )
         viewModelScope.launch {
             chatService.createChatGroup(chatGroup,
-                _uiState.value.groupChatMembers.map { it.docId!! }.toMutableList())
+                _uiState.value.groupChatMembers.map { it.docId!! }.toMutableList()
+            )
         }
     }
 
