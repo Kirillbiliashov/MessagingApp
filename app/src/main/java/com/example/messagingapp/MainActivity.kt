@@ -24,6 +24,8 @@ import com.example.messagingapp.ui.phonenumber.PhoneNumberScreen
 import com.example.messagingapp.ui.settings.SettingsScreen
 import com.example.messagingapp.ui.start.StartScreen
 import com.example.messagingapp.ui.theme.MessagingAppTheme
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

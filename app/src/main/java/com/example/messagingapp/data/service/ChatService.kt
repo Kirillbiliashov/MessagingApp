@@ -116,11 +116,16 @@ class ChatServiceImpl @Inject constructor(
         val messageId = chatDoc.collection(MESSAGES_COLL).document().id
         val messageDoc = chatDoc.collection(MESSAGES_COLL).document(messageId)
         firestore.runTransaction { transaction ->
-            transaction.set(messageDoc, message)
+            val timestamp = System.currentTimeMillis()
+            val messageCopy = message.copy(
+                timestamp = timestamp,
+                senderId = currUserId
+            )
+            transaction.set(messageDoc, messageCopy)
             transaction.set(
                 chatDoc, Chat(
-                    lastUpdated = System.currentTimeMillis(),
-                    lastMessage = message,
+                    lastUpdated = timestamp,
+                    lastMessage = messageCopy,
                     isGroup = false
                 )
             )
