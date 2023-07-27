@@ -1,10 +1,12 @@
-package com.example.messagingapp.data.model.firebase
+package com.example.messagingapp.data.model
 
 import android.annotation.SuppressLint
+import com.example.messagingapp.utils.Helpers
+import com.example.messagingapp.utils.Helpers.asTimestampToString
+import com.example.messagingapp.utils.Helpers.getYearFromTimestamp
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.IgnoreExtraProperties
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -25,3 +27,13 @@ fun Message.timestampToString(pattern: String): String {
         .withZone(ZoneId.systemDefault())
     return formatter.format(instant)
 }
+
+ fun Message.dateString() : String {
+     val currDateYear = Helpers.currDate.asTimestampToString("yyyy.MM.dd")
+     val messageDateYear = timestamp!!.asTimestampToString("yyyy.MM.dd")
+     if (currDateYear == messageDateYear) return timestamp.asTimestampToString("HH:mm")
+     val currYear = Helpers.currDate.getYearFromTimestamp()
+     val messageYear = timestamp.getYearFromTimestamp()
+     if (currYear == messageYear) return timestamp.asTimestampToString("MM.dd")
+     return messageDateYear
+ }

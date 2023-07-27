@@ -1,6 +1,6 @@
 package com.example.messagingapp.data.service
 
-import com.example.messagingapp.data.model.firebase.Message
+import com.example.messagingapp.data.model.Message
 import com.example.messagingapp.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Filter

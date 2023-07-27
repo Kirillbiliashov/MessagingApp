@@ -2,9 +2,9 @@ package com.example.messagingapp.ui.addGroupChat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.messagingapp.data.model.firebase.Chat
-import com.example.messagingapp.data.model.firebase.GroupInfo
-import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.data.model.Chat
+import com.example.messagingapp.data.model.GroupInfo
+import com.example.messagingapp.data.model.User
 import com.example.messagingapp.data.service.ChatService
 import com.example.messagingapp.data.service.UserProfileService
 import dagger.hilt.android.lifecycle.HiltViewModel

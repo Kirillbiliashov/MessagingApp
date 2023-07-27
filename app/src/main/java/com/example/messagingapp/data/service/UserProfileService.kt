@@ -1,13 +1,11 @@
 package com.example.messagingapp.data.service
 
-import com.example.messagingapp.data.model.firebase.User
-import com.example.messagingapp.utils.Constants
+import com.example.messagingapp.data.model.User
 import com.example.messagingapp.utils.Constants.PHONE_NUMBER_FIELD
 import com.example.messagingapp.utils.Constants.TAG_FIELD
 import com.example.messagingapp.utils.Constants.USERS_COLL
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

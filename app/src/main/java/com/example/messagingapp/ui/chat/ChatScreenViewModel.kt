@@ -3,8 +3,8 @@ package com.example.messagingapp.ui.chat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.messagingapp.data.model.firebase.Message
-import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.data.model.Message
+import com.example.messagingapp.data.model.User
 import com.example.messagingapp.data.service.AuthenticationService
 import com.example.messagingapp.data.service.ChatService
 import com.example.messagingapp.data.service.MessageService

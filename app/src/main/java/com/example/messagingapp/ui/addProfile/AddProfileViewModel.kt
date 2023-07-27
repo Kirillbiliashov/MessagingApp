@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.messagingapp.data.service.AuthenticationService
 import com.example.messagingapp.data.service.UserProfileService
-import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.data.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

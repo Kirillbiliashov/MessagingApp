@@ -33,10 +33,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.messagingapp.data.model.firebase.Chat
-import com.example.messagingapp.data.model.firebase.Message
-import com.example.messagingapp.data.model.firebase.headerName
-import com.example.messagingapp.data.model.firebase.timestampToString
+import com.example.messagingapp.data.model.Chat
+import com.example.messagingapp.data.model.Message
+import com.example.messagingapp.data.model.headerName
+import com.example.messagingapp.data.model.timestampToString
 import com.example.messagingapp.ui.components.MessageTextField
 import com.example.messagingapp.utils.Helpers
 import com.example.messagingapp.utils.Helpers.asTimestampToString
@@ -45,6 +45,7 @@ import com.google.firebase.appcheck.interop.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupChatScreen(
+    onNavBarClick: (String) -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -53,10 +54,13 @@ fun GroupChatScreen(
     val members = uiState.value.members
     Scaffold(topBar = {
         TopAppBar(title = {
-            GroupChatScreenTopBar(
-                chat = uiState.value.chat,
-                membersCount = members.count()
-            )
+            if (members.isNotEmpty()) {
+                GroupChatScreenTopBar(
+                    chat = uiState.value.chat,
+                    membersCount = members.count(),
+                    onTopBarClick = onNavBarClick
+                )
+            }
         }, navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
@@ -157,11 +161,13 @@ fun GroupMessageRow(
 fun GroupChatScreenTopBar(
     chat: Chat?,
     membersCount: Int,
-    modifier: Modifier = Modifier) {
+    onTopBarClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { println("clicked") },
+            .clickable { onTopBarClick(chat!!.docId!!) },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -1,10 +1,8 @@
 package com.example.messagingapp.utils
 
 import android.annotation.SuppressLint
-import android.os.Build
-import androidx.annotation.RequiresApi
-import com.example.messagingapp.data.model.firebase.timestampToString
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -20,6 +18,12 @@ object Helpers {
             .ofPattern(pattern)
             .withZone(ZoneId.systemDefault())
         return formatter.format(instant)
+    }
+
+    fun Long.getYearFromTimestamp(): Int {
+        val instant: Instant = Instant.ofEpochMilli(this)
+        val localDateTime: LocalDateTime = instant.atZone(ZoneId.systemDefault()).toLocalDateTime()
+        return localDateTime.year
     }
 
 }

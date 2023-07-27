@@ -39,11 +39,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.messagingapp.data.model.firebase.Chat
-import com.example.messagingapp.data.model.firebase.Message
-import com.example.messagingapp.data.model.firebase.User
-import com.example.messagingapp.data.model.firebase.headerName
-import com.example.messagingapp.data.model.firebase.timestampToString
+import com.example.messagingapp.data.model.Chat
+import com.example.messagingapp.data.model.Message
+import com.example.messagingapp.data.model.User
+import com.example.messagingapp.data.model.dateString
+import com.example.messagingapp.data.model.headerName
+import com.example.messagingapp.data.model.timestampToString
 import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
 import com.example.messagingapp.utils.Helpers.asTimestampToString
 
@@ -230,7 +231,7 @@ fun UserChatCardContent(
 ) {
     UserCardHeader(
         user = participant,
-        dateString = lastMessage.timestampToString("HH:mm")
+        dateString = lastMessage.dateString()
     )
     Text(
         text = lastMessage.content ?: "",

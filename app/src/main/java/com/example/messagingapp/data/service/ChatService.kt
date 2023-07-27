@@ -1,8 +1,8 @@
 package com.example.messagingapp.data.service
 
-import com.example.messagingapp.data.model.firebase.Chat
-import com.example.messagingapp.data.model.firebase.Message
-import com.example.messagingapp.data.model.firebase.User
+import com.example.messagingapp.data.model.Chat
+import com.example.messagingapp.data.model.Message
+import com.example.messagingapp.data.model.User
 import com.example.messagingapp.utils.Constants.CHATS_COLL
 import com.example.messagingapp.utils.Constants.LAST_MESSAGE_FIELD
 import com.example.messagingapp.utils.Constants.LAST_UPDATED_FIELD
@@ -19,7 +19,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.asDeferred
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton

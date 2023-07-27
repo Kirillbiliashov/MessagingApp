@@ -19,6 +19,7 @@ import com.example.messagingapp.ui.channels.ChannelsScreen
 import com.example.messagingapp.ui.chat.ChatScreen
 import com.example.messagingapp.ui.chats.ChatsScreen
 import com.example.messagingapp.ui.groupChat.GroupChatScreen
+import com.example.messagingapp.ui.groupChatDetails.GroupChatDetailsScreen
 import com.example.messagingapp.ui.phonenumber.PhoneNumberScreen
 import com.example.messagingapp.ui.settings.SettingsScreen
 import com.example.messagingapp.ui.start.StartScreen
@@ -113,7 +114,18 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 GroupChatScreen(onBackClick = {
                                     navController.popBackStack()
+                                },
+                                onNavBarClick = { chatId ->
+                                    navController.navigate("groupChatDetails/$chatId")
                                 })
+                            }
+                            composable(
+                                route = Destinations.GROUP_CHAT_DETAILS,
+                                arguments = listOf(navArgument("chatId") {
+                                    type = NavType.StringType
+                                })
+                            ) {
+                                GroupChatDetailsScreen()
                             }
                             composable(route = Destinations.ADD_GROUP_CHAT) {
                                 AddGroupChatScreen(onBackClick = {
@@ -152,4 +164,5 @@ object Destinations {
     val SETTINGS = "settings"
     val ADD_PROFILE = "addProfile"
     val ADD_GROUP_CHAT = "addGroupChat"
+    val GROUP_CHAT_DETAILS = "groupChatDetails/{chatId}"
 }
