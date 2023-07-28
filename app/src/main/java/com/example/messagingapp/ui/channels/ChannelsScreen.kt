@@ -33,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.messagingapp.data.model.Channel
 import com.example.messagingapp.ui.chats.SearchTextField
 import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
 import com.example.messagingapp.utils.Helpers.asTimestampToString
@@ -71,51 +72,107 @@ fun ChannelsScreen(
             )
             Spacer(modifier = modifier.height(8.dp))
             Divider(thickness = 0.5.dp)
-            LazyColumn {
-                items(items = uiState.value.userChannels) { channel ->
-                    Row(
-                        modifier = modifier
-                            .fillMaxSize()
-                            .size(64.dp)
-                            .padding(start = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.googleg_disabled_color_18),
-                            contentDescription = null,
-                            modifier = modifier.size(52.dp)
-                        )
-                        Spacer(modifier = modifier.width(16.dp))
-                        Box(modifier = modifier.fillMaxHeight()) {
-                            Column(
-                                modifier = modifier
-                                    .align(Alignment.CenterStart)
-                                    .padding(end = 8.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = channel.name!!,
-                                        fontWeight = FontWeight.W500,
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                    Spacer(modifier = modifier.weight(1f))
-                                    val dateString =
-                                        channel.lastUpdated!!.asTimestampToString("HH:mm")
-                                    Text(text = dateString)
-                                }
-                                val lastPost = channel.lastPost
-                                if (lastPost != null) {
-                                    Text(text = lastPost.content!!)
-                                } else {
-                                    Text(text = "No posts yet")
-                                }
-                            }
-                            Divider(
-                                modifier = modifier.align(Alignment.BottomEnd),
-                                thickness = 0.5.dp
+            val queryChannels = uiState.value.queryChannels
+            if (queryChannels.isNotEmpty()) {
+                println("query channels are not empty")
+                QueryChannelsList(queryChannels = queryChannels)
+            } else {
+                UserChannelsList(userChannels = uiState.value.userChannels)
+            }
+        }
+    }
+}
+
+@Composable
+fun QueryChannelsList(queryChannels: List<Channel>, modifier: Modifier = Modifier) {
+    LazyColumn {
+        items(items = queryChannels) { channel ->
+            Row(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(4.dp)
+                    .padding(start = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.googleg_disabled_color_18),
+                    contentDescription = null,
+                    modifier = modifier.size(36.dp)
+                )
+                Spacer(modifier = modifier.width(16.dp))
+                Box(modifier = modifier.fillMaxHeight()) {
+                    Row(modifier = modifier.align(Alignment.CenterStart)) {
+                        Column(modifier = modifier.fillMaxHeight()) {
+                            Text(
+                                text = channel.name!!, fontWeight = FontWeight.W500,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = "@${channel.tag!!}, " +
+                                        "${channel.subscribersCount} subscribers"
                             )
                         }
+                        Spacer(modifier = modifier.weight(1f))
                     }
+                    Divider(
+                        modifier = modifier.align(Alignment.BottomEnd),
+                        thickness = 0.5.dp
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun UserChannelsList(
+    userChannels: List<Channel>,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn {
+        items(items = userChannels) { channel ->
+            Row(
+                modifier = modifier
+                    .fillMaxSize()
+                    .size(64.dp)
+                    .padding(start = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.googleg_disabled_color_18),
+                    contentDescription = null,
+                    modifier = modifier.size(52.dp)
+                )
+                Spacer(modifier = modifier.width(16.dp))
+                Box(modifier = modifier.fillMaxHeight()) {
+                    Column(
+                        modifier = modifier
+                            .align(Alignment.CenterStart)
+                            .padding(end = 8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = channel.name!!,
+                                fontWeight = FontWeight.W500,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Spacer(modifier = modifier.weight(1f))
+                            val dateString =
+                                channel.lastUpdated!!.asTimestampToString("HH:mm")
+                            Text(text = dateString)
+                        }
+                        val lastPost = channel.lastPost
+                        if (lastPost != null) {
+                            Text(text = lastPost.content!!)
+                        } else {
+                            Text(text = "No posts yet")
+                        }
+                    }
+                    Divider(
+                        modifier = modifier.align(Alignment.BottomEnd),
+                        thickness = 0.5.dp
+                    )
                 }
             }
         }

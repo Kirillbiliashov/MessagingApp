@@ -42,7 +42,8 @@ class AddChannelScreenViewModel @Inject constructor(
         val channel = Channel(
             name = _uiState.value.name,
             description = _uiState.value.description,
-            tag = _uiState.value.tag
+            tag = _uiState.value.tag,
+            subscribersCount = 1
         )
         viewModelScope.launch {
             channelService.saveChannel(channel)

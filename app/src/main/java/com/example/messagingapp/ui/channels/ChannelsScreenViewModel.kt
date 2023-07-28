@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class UiState(
@@ -27,9 +28,14 @@ class ChannelsScreenViewModel @Inject constructor(
 
     val uiState = combine(
         channelService.userChannelsFlow,
+        queryChannelsFlow,
         searchQueryFlow
-    ) { channels, searchQuery ->
-        UiState(userChannels = channels, searchQuery = searchQuery)
+    ) { channels, queryChannels, searchQuery ->
+        UiState(
+            userChannels = channels,
+            searchQuery = searchQuery,
+            queryChannels = queryChannels
+        )
     }
         .stateIn(
             scope = viewModelScope,
@@ -39,6 +45,9 @@ class ChannelsScreenViewModel @Inject constructor(
 
     fun updateSearchQuery(newValue: String) {
         searchQueryFlow.value = newValue
+        viewModelScope.launch {
+            queryChannelsFlow.value = channelService.getChannelsByQuery(newValue)
+        }
     }
 
     fun clearSearchTextField() {

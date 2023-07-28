@@ -2,6 +2,7 @@ package com.example.messagingapp.data.service
 
 import com.example.messagingapp.data.model.Channel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,16 +29,35 @@ class ChannelServiceImpl @Inject constructor(
     override suspend fun saveChannel(channel: Channel) {
         val channelDoc = firestore.collection("channels").document()
         userProfileService.currentUserFlow.collectLatest { user ->
+            val tags = user.channelTags ?: listOf()
             val userDoc = firestore.collection("users").document(user.docId!!)
             firestore.runBatch { writeBatch ->
                 writeBatch.set(channelDoc, channel.copy(ownerId = user.docId,
                     lastUpdated = System.currentTimeMillis()))
                 writeBatch.update(
-                    userDoc, "channelTags", (user.channelTags ?: listOf()) + channel.tag
+                    userDoc, "channelTags", tags + channel.tag
                 )
             }
         }
     }
+
+    override suspend fun getChannelsByQuery(query: String) = if (query.length < 4) emptyList()
+    else firestore.collection("channels")
+        .where(
+            Filter.or(
+                Filter.equalTo("tag", query),
+                Filter.and(
+                    Filter.greaterThanOrEqualTo("name", query),
+                    Filter.lessThanOrEqualTo("name", "$query\uf8ff")
+                )
+            )
+        )
+        .limit(5)
+        .get()
+        .await()
+        .toObjects(Channel::class.java)
+
+
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val userChannelsFlow: Flow<List<Channel>> = userProfileService
@@ -64,5 +84,6 @@ class ChannelServiceImpl @Inject constructor(
 
 interface ChannelService {
     suspend fun saveChannel(channel: Channel)
+    suspend fun getChannelsByQuery(query: String): List<Channel>
     val userChannelsFlow: Flow<List<Channel>>
 }
