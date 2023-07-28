@@ -45,7 +45,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.R
 import com.example.messagingapp.data.model.User
-import com.example.messagingapp.ui.chats.UserCard
+import com.example.messagingapp.data.model.headerName
+import com.example.messagingapp.ui.components.SearchResultListItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,14 +162,17 @@ fun GroupChatMembers(
         Box(modifier = modifier.requiredHeightIn(max = 300.dp)) {
             LazyColumn {
                 items(items = groupChatMembers) { user ->
-                    UserCard(user = user, trailingComponent = {
-                        IconButton(onClick = { onPersonRemoveClick(user) }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.remove_person),
-                                contentDescription = null
-                            )
-                        }
-                    })
+                    SearchResultListItem(
+                        title = user.headerName(),
+                        content = user.tag,
+                        trailingComponent = {
+                            IconButton(onClick = { onPersonRemoveClick(user) }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.remove_person),
+                                    contentDescription = null
+                                )
+                            }
+                        })
                 }
             }
         }
@@ -243,8 +247,9 @@ fun QueryUsersSection(
     if (queryUsers.isNotEmpty()) {
         LazyColumn(modifier = modifier.fillMaxWidth()) {
             items(items = queryUsers) { user ->
-                UserCard(
-                    user = user,
+                SearchResultListItem(
+                    title = user.headerName(),
+                    content = user.tag,
                     trailingComponent = {
                         val checked = remember {
                             mutableStateOf(selectedMembers.contains(user))

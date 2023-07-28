@@ -52,6 +52,8 @@ import com.example.messagingapp.data.model.User
 import com.example.messagingapp.data.model.dateString
 import com.example.messagingapp.data.model.headerName
 import com.example.messagingapp.data.model.timestampToString
+import com.example.messagingapp.ui.components.FeedListItem
+import com.example.messagingapp.ui.components.SearchResultListItem
 import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
 import com.example.messagingapp.utils.Helpers.asTimestampToString
 
@@ -101,20 +103,27 @@ fun ChatsScreenContent(
     if (users.isNotEmpty()) {
         LazyColumn {
             items(items = users) { user ->
-                UserCard(user = user, onUserClick = {
-                    viewModel.clearSearchTextField()
-                    onChatClick(user.docId!!, null)
-                })
+                SearchResultListItem(title = user.headerName(), content = user.tag,
+                    modifier = modifier.clickable {
+                        viewModel.clearSearchTextField()
+                        onChatClick(user.docId!!, null)
+                    })
             }
         }
     } else {
         val chatsMapEntries = uiState.value.chatsMap.entries
         LazyColumn {
             items(items = chatsMapEntries.toList()) { (chat, user) ->
-                ChatCard(chat = chat, participant = user, onChatClick = {
-                    if (chat.isGroup!!) onChatClick(null, chat.docId)
-                    else onChatClick(user!!.docId!!, chat.docId)
-                })
+                FeedListItem(
+                    title = user?.headerName() ?: chat.groupInfo!!.name!!,
+                    content = chat.lastMessage?.content ?: "No messages here yet",
+                    date = chat.lastMessage?.dateString() ?:
+                    chat.lastUpdated!!.asTimestampToString("HH:mm"),
+                    modifier = modifier.clickable {
+                        if (chat.isGroup!!) onChatClick(null, chat.docId)
+                        else onChatClick(user!!.docId!!, chat.docId)
+                    }
+                )
             }
         }
     }
@@ -138,8 +147,10 @@ fun SearchTextField(
         ) {
             Icon(imageVector = Icons.Default.Search, contentDescription = null)
             Spacer(modifier = modifier.width(8.dp))
-            Box(modifier = modifier.fillMaxHeight(),
-                contentAlignment = Alignment.CenterStart) {
+            Box(
+                modifier = modifier.fillMaxHeight(),
+                contentAlignment = Alignment.CenterStart
+            ) {
                 innerTextField()
                 if (value == null) {
                     Text(text = "Search", color = Color.DarkGray)
@@ -156,141 +167,4 @@ fun SearchTextField(
             }
         }
     }
-}
-
-@Composable
-fun UserCard(
-    user: User,
-    onUserClick: () -> Unit = {},
-    trailingComponent: @Composable () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-        Row(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(4.dp)
-                .clickable { onUserClick() }
-                .padding(start = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(com.google.firebase.database.collection.R.drawable.googleg_disabled_color_18),
-                contentDescription = null,
-                modifier = modifier.size(36.dp)
-            )
-            Spacer(modifier = modifier.width(16.dp))
-            Box(modifier = modifier.fillMaxHeight()) {
-                Row(modifier = modifier.align(Alignment.CenterStart)) {
-                    Column(modifier = modifier.fillMaxHeight()) {
-                        UserCardHeader(user = user)
-                        if (user.tag != null) {
-                            Text(text = "@${user.tag}")
-                        }
-                    }
-                     Spacer(modifier = modifier.weight(1f))
-                    trailingComponent()
-                }
-             Divider(modifier = modifier.align(Alignment.BottomEnd), thickness = 0.5.dp)
-            }
-
-        }
-
-}
-
-@Composable
-fun ChatCard(
-    chat: Chat,
-    participant: User?,
-    onChatClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxSize()
-            .size(64.dp)
-            .padding(start = 8.dp)
-            .clickable { onChatClick() },
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(com.google.firebase.appcheck.interop.R.drawable.googleg_disabled_color_18),
-            contentDescription = null,
-            modifier = modifier.size(52.dp)
-        )
-        Spacer(modifier = modifier.width(16.dp))
-        Box(modifier = modifier.fillMaxHeight()) {
-            val cardModifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(end = 8.dp)
-            if (participant != null) {
-                UserChatCardContent(
-                    lastMessage = chat.lastMessage!!,
-                    participant = participant,
-                    modifier = cardModifier
-                )
-            } else {
-                GroupChatCardContent(chat = chat, modifier = cardModifier)
-            }
-            Divider(modifier = modifier.align(Alignment.BottomEnd), thickness = 0.5.dp)
-        }
-    }
-}
-
-@Composable
-fun UserChatCardContent(
-    lastMessage: Message, participant: User,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        UserCardHeader(
-            user = participant,
-            dateString = lastMessage.dateString()
-        )
-        Text(
-            text = lastMessage.content ?: "",
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
-fun GroupChatCardContent(
-    chat: Chat,
-    modifier: Modifier = Modifier
-) {
-    val dateString = chat.lastUpdated!!.asTimestampToString("HH:mm")
-    Column(modifier = modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = chat.groupInfo!!.name!!,
-                fontWeight = FontWeight.W500,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(text = dateString)
-        }
-        val messageContent = if (chat.lastMessage != null) chat.lastMessage.content!!
-        else "No messages here yet"
-        Text(text = messageContent)
-    }
-}
-
-@Composable
-fun UserCardHeader(
-    user: User, dateString: String? = null,
-    modifier: Modifier = Modifier
-) {
-    Row {
-        Text(
-            text = user.headerName(),
-            fontWeight = FontWeight.W500,
-            style = MaterialTheme.typography.titleMedium
-        )
-        if (dateString != null) {
-            Spacer(modifier = modifier.weight(1f))
-            Text(text = dateString)
-        }
-    }
-
 }
