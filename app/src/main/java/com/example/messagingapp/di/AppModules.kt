@@ -2,6 +2,8 @@ package com.example.messagingapp.di
 
 import com.example.messagingapp.data.service.AuthenticationService
 import com.example.messagingapp.data.service.AuthenticationServiceImpl
+import com.example.messagingapp.data.service.ChannelService
+import com.example.messagingapp.data.service.ChannelServiceImpl
 import com.example.messagingapp.data.service.ChatService
 import com.example.messagingapp.data.service.ChatServiceImpl
 import com.example.messagingapp.data.service.MessageService
@@ -46,6 +48,12 @@ abstract class ServiceModule {
     abstract fun bindMessageService(
         messageService: MessageServiceImpl
     ): MessageService
+
+    @Binds
+    @Singleton
+    abstract fun bindChannelService(
+        channelService: ChannelServiceImpl
+    ): ChannelService
 }
 
 

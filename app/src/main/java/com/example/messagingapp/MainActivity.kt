@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.messagingapp.ui.addChannel.AddChannelScreen
 import com.example.messagingapp.ui.addGroupChat.AddGroupChatScreen
 import com.example.messagingapp.ui.addProfile.AddProfileScreen
 import com.example.messagingapp.ui.channels.ChannelsScreen
@@ -135,13 +136,25 @@ class MainActivity : ComponentActivity() {
                                 })
                             }
                         }
-                        composable(route = Destinations.CHANNELS) {
-                            ChannelsScreen(onBottomBarItemClick = {
-                                navController.navigate(it) {
-                                    launchSingleTop = true
-                                }
-                            })
+                        navigation(Destinations.CHANNELS, "channelsSection") {
+                            composable(route = Destinations.CHANNELS) {
+                                ChannelsScreen(
+                                    onAddChannelClick = {
+                                        navController.navigate(Destinations.ADD_CHANNEL)
+                                    },
+                                    onBottomBarItemClick = {
+                                        navController.navigate(it) {
+                                            launchSingleTop = true
+                                        }
+                                    })
+                            }
+                            composable(route = Destinations.ADD_CHANNEL) {
+                                AddChannelScreen(onBackClick = {
+                                    navController.popBackStack()
+                                })
+                            }
                         }
+
                         composable(route = Destinations.SETTINGS) {
                             SettingsScreen(onBottomBarItemClick = {
                                 navController.navigate(it) {
@@ -166,5 +179,6 @@ object Destinations {
     val SETTINGS = "settings"
     val ADD_PROFILE = "addProfile"
     val ADD_GROUP_CHAT = "addGroupChat"
+    val ADD_CHANNEL = "addChannel"
     val GROUP_CHAT_DETAILS = "groupChatDetails/{chatId}"
 }
