@@ -11,6 +11,7 @@ data class User(
     val lastName: String? = null,
     val description: String? = null,
     val tag: String? = null,
+    val channelTags: List<String>? = null
 )
 
 

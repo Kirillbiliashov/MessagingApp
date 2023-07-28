@@ -21,7 +21,7 @@ class AuthenticationServiceImpl @Inject constructor(
 ) : AuthenticationService {
 
     private lateinit var verificationId: String
-    override val isCodeSentFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    override val isCodeSentFlow = MutableStateFlow(false)
     override val userMessageFlow: MutableStateFlow<String?> = MutableStateFlow(null)
     override val currentUser
         get() = auth.currentUser

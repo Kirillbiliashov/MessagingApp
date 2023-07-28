@@ -4,16 +4,32 @@ import com.example.messagingapp.data.model.User
 import com.example.messagingapp.utils.Constants.PHONE_NUMBER_FIELD
 import com.example.messagingapp.utils.Constants.TAG_FIELD
 import com.example.messagingapp.utils.Constants.USERS_COLL
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class UserProfileServiceImpl @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth
 ) : UserProfileService {
+    override val currentUserFlow = callbackFlow {
+        val listener = firestore.collection(USERS_COLL)
+            .document(auth.uid!!)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) cancel()
+                else trySend(snapshot.toObject(User::class.java)!!)
+            }
+        awaitClose { listener.remove() }
+    }
+
     override suspend fun userExists(userId: String): Boolean {
         return firestore
             .collection(USERS_COLL)
@@ -63,6 +79,7 @@ class UserProfileServiceImpl @Inject constructor(
 }
 
 interface UserProfileService {
+    val currentUserFlow: Flow<User>
     suspend fun userExists(userId: String): Boolean
     suspend fun saveProfile(user: User)
 

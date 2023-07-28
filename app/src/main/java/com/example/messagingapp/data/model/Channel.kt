@@ -11,4 +11,5 @@ data class Channel(
     val tag: String? = null,
     val ownerId: String? = null,
     val lastPost: Post? = null,
+    val lastUpdated: Long? = null
 )
