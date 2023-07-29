@@ -46,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.R
 import com.example.messagingapp.data.model.User
 import com.example.messagingapp.data.model.headerName
+import com.example.messagingapp.ui.components.BackNavigationIcon
 import com.example.messagingapp.ui.components.SearchResultListItem
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,9 +59,7 @@ fun AddGroupChatScreen(
         topBar = {
             TopAppBar(title = { Text(text = "New group chat") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
-                    }
+                    BackNavigationIcon(onBackClick = onBackClick)
                 })
         }
     ) { padding ->
@@ -98,16 +97,7 @@ fun AddGroupChatScreenContent(
         isPrivate = uiState.value.isPrivate,
         onCheckedChange = viewModel::updateIsPrivateValue
     )
-    Row(
-        modifier = modifier.fillMaxWidth(0.7f),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = "Members", style = MaterialTheme.typography.displayMedium)
-        Spacer(modifier = modifier.weight(1f))
-        OutlinedButton(onClick = viewModel::displayFindMemberDialog) {
-            Text(text = "Add")
-        }
-    }
+    AddMembersSection(onAddButtonClick = viewModel::displayFindMemberDialog)
     GroupChatMembers(
         groupChatMembers = uiState.value.groupChatMembers,
         onPersonRemoveClick = viewModel::removeSelectedMember
@@ -129,6 +119,22 @@ fun AddGroupChatScreenContent(
         viewModel.createNewChatGroup()
     }) {
         Text(text = "Create")
+    }
+}
+
+@Composable
+fun AddMembersSection(
+    onAddButtonClick: () -> Unit,
+    modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(0.7f),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = "Members", style = MaterialTheme.typography.displayMedium)
+        Spacer(modifier = modifier.weight(1f))
+        OutlinedButton(onClick = onAddButtonClick) {
+            Text(text = "Add")
+        }
     }
 }
 

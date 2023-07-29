@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.messagingapp.ui.components.BackNavigationIcon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,10 +37,7 @@ fun AddProfileScreen(
     Scaffold(topBar = {
         TopAppBar(title = { Text(text = "Authentication") }, navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = null
-                )
+                BackNavigationIcon(onBackClick = onBackClick)
             }
         })
     }) { padding ->

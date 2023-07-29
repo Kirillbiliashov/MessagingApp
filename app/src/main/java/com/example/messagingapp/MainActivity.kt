@@ -118,9 +118,9 @@ class MainActivity : ComponentActivity() {
                                 GroupChatScreen(onBackClick = {
                                     navController.popBackStack()
                                 },
-                                onNavBarClick = { chatId ->
-                                    navController.navigate("groupChatDetails/$chatId")
-                                })
+                                    onNavBarClick = { chatId ->
+                                        navController.navigate("groupChatDetails/$chatId")
+                                    })
                             }
                             composable(
                                 route = Destinations.GROUP_CHAT_DETAILS,
@@ -128,7 +128,9 @@ class MainActivity : ComponentActivity() {
                                     type = NavType.StringType
                                 })
                             ) {
-                                GroupChatDetailsScreen()
+                                GroupChatDetailsScreen(onBackClick = {
+                                    navController.popBackStack()
+                                })
                             }
                             composable(route = Destinations.ADD_GROUP_CHAT) {
                                 AddGroupChatScreen(onBackClick = {
@@ -154,7 +156,6 @@ class MainActivity : ComponentActivity() {
                                 })
                             }
                         }
-
                         composable(route = Destinations.SETTINGS) {
                             SettingsScreen(onBottomBarItemClick = {
                                 navController.navigate(it) {

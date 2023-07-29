@@ -34,6 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.data.model.Message
 import com.example.messagingapp.data.model.User
 import com.example.messagingapp.data.model.timestampToString
+import com.example.messagingapp.ui.components.BackNavigationIcon
 import com.example.messagingapp.ui.components.MessageTextField
 import com.example.messagingapp.utils.Helpers
 import com.example.messagingapp.utils.Helpers.asTimestampToString
@@ -53,12 +54,7 @@ fun ChatScreen(
                 ChatScreenTopBarContent(participant = uiState.value.participant)
             },
             navigationIcon = {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = null
-                    )
-                }
+                BackNavigationIcon(onBackClick = onBackClick)
             })
     }) { padding ->
         Column(
@@ -71,19 +67,7 @@ fun ChatScreen(
                 it.timestampToString("MM.dd.yyyy")
             }
             messagesByDateMap.forEach { (date, messages) ->
-                Badge(
-                    containerColor = MaterialTheme.colorScheme.outlineVariant,
-                    modifier = modifier.padding(vertical = 8.dp)
-                ) {
-                    val displayDate = if (date == Helpers.currDate
-                            .asTimestampToString("MM.dd.yyyy")
-                    )
-                        "Today" else date
-                    Text(
-                        text = displayDate,
-                        modifier = modifier.padding(4.dp), fontSize = 12.sp
-                    )
-                }
+                DateBadge(date = date)
                 LazyColumn {
                     items(items = messages) { message ->
                         MessageRow(
@@ -101,6 +85,25 @@ fun ChatScreen(
                 onSendIconClick = viewModel::sendMessage
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DateBadge(date: String,
+    modifier: Modifier = Modifier) {
+    Badge(
+        containerColor = MaterialTheme.colorScheme.outlineVariant,
+        modifier = modifier.padding(vertical = 8.dp)
+    ) {
+        val displayDate = if (date == Helpers.currDate
+                .asTimestampToString("MM.dd.yyyy")
+        )
+            "Today" else date
+        Text(
+            text = displayDate,
+            modifier = modifier.padding(4.dp), fontSize = 12.sp
+        )
     }
 }
 

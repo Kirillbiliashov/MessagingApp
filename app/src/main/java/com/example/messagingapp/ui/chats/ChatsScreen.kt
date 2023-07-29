@@ -54,6 +54,7 @@ import com.example.messagingapp.data.model.headerName
 import com.example.messagingapp.data.model.timestampToString
 import com.example.messagingapp.ui.components.FeedListItem
 import com.example.messagingapp.ui.components.SearchResultListItem
+import com.example.messagingapp.ui.components.SearchTextField
 import com.example.messagingapp.ui.navigation.MessagingAppBottomNavigation
 import com.example.messagingapp.utils.Helpers.asTimestampToString
 
@@ -101,70 +102,51 @@ fun ChatsScreenContent(
     val users = uiState.value.users
     Divider(thickness = 0.5.dp)
     if (users.isNotEmpty()) {
-        LazyColumn {
-            items(items = users) { user ->
-                SearchResultListItem(title = user.headerName(), content = user.tag,
-                    modifier = modifier.clickable {
-                        viewModel.clearSearchTextField()
-                        onChatClick(user.docId!!, null)
-                    })
-            }
-        }
+        UsersList(users = users, onUserClick = { user ->
+            viewModel.clearSearchTextField()
+            onChatClick(user.docId!!, null)
+        })
     } else {
-        val chatsMapEntries = uiState.value.chatsMap.entries
-        LazyColumn {
-            items(items = chatsMapEntries.toList()) { (chat, user) ->
-                FeedListItem(
-                    title = user?.headerName() ?: chat.groupInfo!!.name!!,
-                    content = chat.lastMessage?.content ?: "No messages here yet",
-                    date = chat.lastMessage?.dateString() ?:
-                    chat.lastUpdated!!.asTimestampToString("HH:mm"),
-                    modifier = modifier.clickable {
-                        if (chat.isGroup!!) onChatClick(null, chat.docId)
-                        else onChatClick(user!!.docId!!, chat.docId)
-                    }
-                )
-            }
+        ChatsList(chatUsers = uiState.value.chatsMap,
+            onChatClick = { chat, user ->
+                if (chat.isGroup!!) onChatClick(null, chat.docId)
+                else onChatClick(user!!.docId!!, chat.docId)
+            })
+    }
+}
+
+@Composable
+fun ChatsList(
+    chatUsers: Map<Chat, User?>,
+    onChatClick: (Chat, User?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn {
+        items(items = chatUsers.toList()) { (chat, user) ->
+            FeedListItem(
+                title = user?.headerName() ?: chat.groupInfo!!.name!!,
+                content = chat.lastMessage?.content ?: "No messages here yet",
+                date = chat.lastMessage?.dateString()
+                    ?: chat.lastUpdated!!.asTimestampToString("HH:mm"),
+                modifier = modifier.clickable {
+                    onChatClick(chat, user)
+                }
+            )
         }
     }
 }
 
 @Composable
-fun SearchTextField(
-    value: String?,
-    onValueChange: (String) -> Unit,
-    onClearIconClick: () -> Unit,
+fun UsersList(
+    users: List<User>, onUserClick: (User) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    BasicTextField(value = value ?: "", onValueChange = onValueChange) { innerTextField ->
-        Row(
-            modifier = modifier
-                .fillMaxWidth(0.95f)
-                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
-                .padding(horizontal = 8.dp)
-                .height(36.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(imageVector = Icons.Default.Search, contentDescription = null)
-            Spacer(modifier = modifier.width(8.dp))
-            Box(
-                modifier = modifier.fillMaxHeight(),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                innerTextField()
-                if (value == null) {
-                    Text(text = "Search", color = Color.DarkGray)
-                }
-            }
-            value?.let {
-                Spacer(modifier = modifier.weight(1f))
-                IconButton(
-                    onClick = onClearIconClick,
-                    modifier = modifier.size(22.dp)
-                ) {
-                    Icon(imageVector = Icons.Default.Clear, contentDescription = null)
-                }
-            }
+    LazyColumn {
+        items(items = users) { user ->
+            SearchResultListItem(title = user.headerName(), content = user.tag,
+                modifier = modifier.clickable {
+                    onUserClick(user)
+                })
         }
     }
 }

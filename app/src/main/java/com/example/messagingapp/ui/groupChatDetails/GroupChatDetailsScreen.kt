@@ -38,10 +38,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.data.model.headerName
+import com.example.messagingapp.ui.components.BackNavigationIcon
+import com.example.messagingapp.ui.components.SearchResultListItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupChatDetailsScreen(modifier: Modifier = Modifier) {
+fun GroupChatDetailsScreen(
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier) {
     val viewModel: GroupChatMembersViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsState()
     Scaffold(
@@ -49,9 +53,7 @@ fun GroupChatDetailsScreen(modifier: Modifier = Modifier) {
             TopAppBar(title = {
                 Text(text = "Details")
             }, navigationIcon = {
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
-                }
+                BackNavigationIcon(onBackClick = onBackClick)
             })
         }
     ) { padding ->
@@ -89,32 +91,13 @@ fun GroupChatDetailsScreen(modifier: Modifier = Modifier) {
                 )
             }
             Spacer(modifier = modifier.height(8.dp))
-            Divider()
+            Divider(thickness = 0.5.dp)
             LazyColumn {
                 items(items = uiState.value.members) { user ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Spacer(modifier = modifier.width(8.dp))
-                        Image(
-                            painter = painterResource(id = com.google.firebase.firestore.ktx.R.drawable.googleg_disabled_color_18),
-                            contentDescription = null,
-                            modifier = modifier
-                                .size(40.dp)
-                        )
-                        Spacer(modifier = modifier.width(8.dp))
-                        Box(modifier = modifier.fillMaxHeight()) {
-                            Text(
-                                text = user.headerName(), fontSize = 16.sp,
-                                modifier = modifier.align(Alignment.CenterStart)
-                            )
-                            Divider(modifier = modifier.align(Alignment.BottomEnd))
-                        }
-                    }
+                    SearchResultListItem(
+                        title = user.headerName(),
+                        content = "Last seen recently"
+                    )
                 }
             }
         }

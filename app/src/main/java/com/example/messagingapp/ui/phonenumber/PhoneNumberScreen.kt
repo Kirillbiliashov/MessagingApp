@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.messagingapp.ui.components.BackNavigationIcon
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,12 +58,7 @@ fun PhoneNumberScreen(
         topBar = {
             TopAppBar(title = { Text(text = "Authentication") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = null
-                        )
-                    }
+                    BackNavigationIcon(onBackClick = onBackClick)
                 })
         }) { padding ->
         Column(
