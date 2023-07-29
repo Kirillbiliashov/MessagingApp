@@ -57,6 +57,12 @@ class ChannelServiceImpl @Inject constructor(
         .await()
         .toObjects(Channel::class.java)
 
+    override suspend fun getChannelByDocId(docId: String) =
+        firestore.collection("channels")
+            .document(docId)
+            .get()
+            .await()
+            .toObject(Channel::class.java)
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -83,7 +89,8 @@ class ChannelServiceImpl @Inject constructor(
 }
 
 interface ChannelService {
+    val userChannelsFlow: Flow<List<Channel>>
     suspend fun saveChannel(channel: Channel)
     suspend fun getChannelsByQuery(query: String): List<Channel>
-    val userChannelsFlow: Flow<List<Channel>>
+    suspend fun getChannelByDocId(docId: String): Channel?
 }

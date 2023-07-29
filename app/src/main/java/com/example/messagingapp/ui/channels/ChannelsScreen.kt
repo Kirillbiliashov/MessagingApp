@@ -44,6 +44,7 @@ import com.google.firebase.database.collection.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChannelsScreen(
+    onChannelClick: (String) -> Unit,
     onAddChannelClick: () -> Unit,
     onBottomBarItemClick: (String) -> Unit,
     modifier: Modifier = Modifier
@@ -76,21 +77,31 @@ fun ChannelsScreen(
             Divider(thickness = 0.5.dp)
             val queryChannels = uiState.value.queryChannels
             if (queryChannels.isNotEmpty()) {
-                QueryChannelsList(queryChannels = queryChannels)
+                QueryChannelsList(
+                    onChannelClick = onChannelClick,
+                    queryChannels = queryChannels
+                )
             } else {
-                UserChannelsList(userChannels = uiState.value.userChannels)
+                UserChannelsList(
+                    onChannelClick = onChannelClick,
+                    userChannels = uiState.value.userChannels
+                )
             }
         }
     }
 }
 
 @Composable
-fun QueryChannelsList(queryChannels: List<Channel>, modifier: Modifier = Modifier) {
+fun QueryChannelsList(
+    onChannelClick: (String) -> Unit,
+    queryChannels: List<Channel>, modifier: Modifier = Modifier
+) {
     LazyColumn {
         items(items = queryChannels) { channel ->
             SearchResultListItem(
                 title = channel.name!!,
-                content = "@${channel.tag}, ${channel.subscribersCount} subscribers"
+                content = "@${channel.tag}, ${channel.subscribersCount} subscribers",
+                modifier = modifier.clickable { onChannelClick(channel.docId!!) }
             )
         }
     }
@@ -99,6 +110,7 @@ fun QueryChannelsList(queryChannels: List<Channel>, modifier: Modifier = Modifie
 
 @Composable
 fun UserChannelsList(
+    onChannelClick: (String) -> Unit,
     userChannels: List<Channel>,
     modifier: Modifier = Modifier
 ) {
@@ -108,7 +120,10 @@ fun UserChannelsList(
             FeedListItem(
                 title = channel.name!!,
                 content = if (lastPost != null) lastPost.content!! else "No posts yet",
-                date = channel.lastUpdated!!.asTimestampToString("HH:mm")
+                date = channel.lastUpdated!!.asTimestampToString("HH:mm"),
+                modifier = modifier.clickable {
+                    onChannelClick(channel.docId!!)
+                }
             )
         }
     }

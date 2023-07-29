@@ -16,6 +16,7 @@ import androidx.navigation.navArgument
 import com.example.messagingapp.ui.addChannel.AddChannelScreen
 import com.example.messagingapp.ui.addGroupChat.AddGroupChatScreen
 import com.example.messagingapp.ui.addProfile.AddProfileScreen
+import com.example.messagingapp.ui.channel.ChannelScreen
 import com.example.messagingapp.ui.channels.ChannelsScreen
 import com.example.messagingapp.ui.chat.ChatScreen
 import com.example.messagingapp.ui.chats.ChatsScreen
@@ -148,7 +149,21 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate(it) {
                                             launchSingleTop = true
                                         }
-                                    })
+                                    },
+                                    onChannelClick = { id ->
+                                        navController.navigate("channel/$id")
+                                    }
+                                )
+                            }
+                            composable(
+                                route = Destinations.CHANNEL,
+                                arguments = listOf(navArgument("channelId") {
+                                    type = NavType.StringType
+                                })
+                            ) {
+                                ChannelScreen(onBackClick = {
+                                    navController.popBackStack()
+                                })
                             }
                             composable(route = Destinations.ADD_CHANNEL) {
                                 AddChannelScreen(onBackClick = {
@@ -177,6 +192,7 @@ object Destinations {
     val CHAT = "chat/{participantId}?chatId={chatId}"
     val GROUP_CHAT = "groupChat/{chatId}"
     val CHANNELS = "channels"
+    val CHANNEL = "channel/{channelId}"
     val SETTINGS = "settings"
     val ADD_PROFILE = "addProfile"
     val ADD_GROUP_CHAT = "addGroupChat"

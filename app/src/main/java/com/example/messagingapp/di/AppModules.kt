@@ -8,6 +8,8 @@ import com.example.messagingapp.data.service.ChatService
 import com.example.messagingapp.data.service.ChatServiceImpl
 import com.example.messagingapp.data.service.MessageService
 import com.example.messagingapp.data.service.MessageServiceImpl
+import com.example.messagingapp.data.service.PostService
+import com.example.messagingapp.data.service.PostServiceImpl
 import com.example.messagingapp.data.service.UserProfileService
 import com.example.messagingapp.data.service.UserProfileServiceImpl
 import com.google.firebase.auth.FirebaseAuth
@@ -54,6 +56,12 @@ abstract class ServiceModule {
     abstract fun bindChannelService(
         channelService: ChannelServiceImpl
     ): ChannelService
+
+    @Binds
+    @Singleton
+    abstract fun bindPostService(
+        postService: PostServiceImpl
+    ): PostService
 }
 
 
