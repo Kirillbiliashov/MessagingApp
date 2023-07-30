@@ -4,9 +4,14 @@ import com.example.messagingapp.data.model.Chat
 import com.example.messagingapp.data.model.Message
 import com.example.messagingapp.data.model.User
 import com.example.messagingapp.utils.Constants.CHATS_COLL
+import com.example.messagingapp.utils.Constants.GROUP_INFO_FIELD
+import com.example.messagingapp.utils.Constants.IS_GROUP_FIELD
 import com.example.messagingapp.utils.Constants.LAST_MESSAGE_FIELD
 import com.example.messagingapp.utils.Constants.LAST_UPDATED_FIELD
+import com.example.messagingapp.utils.Constants.MEMBERS_FIELD
 import com.example.messagingapp.utils.Constants.MESSAGES_COLL
+import com.example.messagingapp.utils.Constants.RECEIVER_ID_FIELD
+import com.example.messagingapp.utils.Constants.SENDER_ID_FIELD
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
@@ -32,6 +37,7 @@ class ChatServiceImpl @Inject constructor(
 
     private val currUserId = auth.currentUser!!.uid
     private val phoneNumber = auth.currentUser!!.phoneNumber
+    private val chatsColl = firestore.collection(CHATS_COLL)
 
     override val userChatsMapFlow = callbackFlow {
         val listener = userChatsQuery
@@ -49,16 +55,15 @@ class ChatServiceImpl @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    private val userChatsQuery = firestore
-        .collection(CHATS_COLL)
+    private val userChatsQuery = chatsColl
         .orderBy(LAST_UPDATED_FIELD, Query.Direction.DESCENDING)
         .where(
             Filter.or(
-                Filter.equalTo("lastMessage.senderId", currUserId),
-                Filter.equalTo("lastMessage.receiverId", currUserId),
+                Filter.equalTo("$LAST_MESSAGE_FIELD.$SENDER_ID_FIELD", currUserId),
+                Filter.equalTo("$LAST_MESSAGE_FIELD.$RECEIVER_ID_FIELD", currUserId),
                 Filter.and(
-                    Filter.equalTo("isGroup", true),
-                    Filter.arrayContains("groupInfo.members", phoneNumber)
+                    Filter.equalTo(IS_GROUP_FIELD, true),
+                    Filter.arrayContains("$GROUP_INFO_FIELD.$MEMBERS_FIELD", phoneNumber)
                 )
             )
         )
@@ -94,7 +99,7 @@ class ChatServiceImpl @Inject constructor(
     }
 
     private suspend fun addMessageToExistingDocument(message: Message, chatId: String) {
-        val chatDoc = firestore.collection(CHATS_COLL).document(chatId)
+        val chatDoc = chatsColl.document(chatId)
         val messagesColl = chatDoc.collection(MESSAGES_COLL)
         val messageId = messagesColl.document().id
         firestore.runBatch { writeBatch ->
@@ -110,7 +115,6 @@ class ChatServiceImpl @Inject constructor(
     }
 
     private suspend fun createChatWithMessage(message: Message): String {
-        val chatsColl = firestore.collection(CHATS_COLL)
         val chatId = chatsColl.document().id
         val chatDoc = chatsColl.document(chatId)
         val messageId = chatDoc.collection(MESSAGES_COLL).document().id
@@ -135,20 +139,20 @@ class ChatServiceImpl @Inject constructor(
 
     override suspend fun createChatGroup(chat: Chat) {
         val groupInfo = chat.groupInfo!!
-        firestore
-            .collection(CHATS_COLL)
+        chatsColl
             .add(
-                chat.copy(lastUpdated = System.currentTimeMillis(),
-                groupInfo = groupInfo.copy(
-                    createdBy = currUserId,
-                    members = groupInfo.members!! + phoneNumber!!
-                ))
+                chat.copy(
+                    lastUpdated = System.currentTimeMillis(),
+                    groupInfo = groupInfo.copy(
+                        createdBy = currUserId,
+                        members = groupInfo.members!! + phoneNumber!!
+                    )
+                )
             )
             .await()
     }
 
-    override suspend fun getByDocId(chatId: String) = firestore
-        .collection(CHATS_COLL)
+    override suspend fun getByDocId(chatId: String) = chatsColl
         .document(chatId)
         .get()
         .await()

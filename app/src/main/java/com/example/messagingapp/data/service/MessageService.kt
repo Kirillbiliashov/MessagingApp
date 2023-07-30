@@ -2,6 +2,8 @@ package com.example.messagingapp.data.service
 
 import com.example.messagingapp.data.model.Message
 import com.example.messagingapp.utils.Constants
+import com.example.messagingapp.utils.Constants.CHATS_COLL
+import com.example.messagingapp.utils.Constants.MESSAGES_COLL
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,9 +33,9 @@ class MessageServiceImpl @Inject constructor(
 
     override fun getGroupChatMessagesFlow(groupChatId: String) = callbackFlow {
         val listener = firestore
-            .collection("chats")
+            .collection(CHATS_COLL)
             .document(groupChatId)
-            .collection("messages")
+            .collection(MESSAGES_COLL)
             .orderBy(Constants.TIMESTAMP_FIELD)
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) cancel()
@@ -43,7 +45,7 @@ class MessageServiceImpl @Inject constructor(
     }
 
     private fun getMessagesQuery(participantId: String) = firestore
-        .collectionGroup(Constants.MESSAGES_COLL)
+        .collectionGroup(MESSAGES_COLL)
         .orderBy(Constants.TIMESTAMP_FIELD)
         .where(
             Filter.or(

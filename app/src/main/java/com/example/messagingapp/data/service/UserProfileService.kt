@@ -20,8 +20,11 @@ class UserProfileServiceImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth
 ) : UserProfileService {
+
+    private val usersColl = firestore.collection(USERS_COLL)
+
     override val currentUserFlow = callbackFlow {
-        val listener = firestore.collection(USERS_COLL)
+        val listener = usersColl
             .document(auth.uid!!)
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) cancel()
@@ -31,8 +34,7 @@ class UserProfileServiceImpl @Inject constructor(
     }
 
     override suspend fun userExists(userId: String): Boolean {
-        return firestore
-            .collection(USERS_COLL)
+        return usersColl
             .document(userId)
             .get()
             .await()
@@ -40,13 +42,12 @@ class UserProfileServiceImpl @Inject constructor(
     }
 
     override suspend fun saveProfile(user: User) {
-        firestore.collection(USERS_COLL).document(user.docId!!).set(user).await()
+        usersColl.document(user.docId!!).set(user).await()
     }
 
     override suspend fun getProfilesByQuery(query: String): List<User> =
         if (query.length < 4) listOf() else
-            firestore
-                .collection(USERS_COLL)
+            usersColl
                 .orderBy(TAG_FIELD)
                 .where(
                     Filter.or(
@@ -62,19 +63,18 @@ class UserProfileServiceImpl @Inject constructor(
                 .toObjects(User::class.java)
 
     override suspend fun getByPhoneNumbers(phoneNumbers: List<String>): List<User> =
-        firestore
-            .collection(USERS_COLL)
-            .whereIn("phoneNumber", phoneNumbers)
+        usersColl
+            .whereIn(PHONE_NUMBER_FIELD, phoneNumbers)
             .get()
             .await()
             .toObjects(User::class.java)
 
-    override suspend fun getProfileByDocumentId(docId: String): User? = firestore
-        .collection(USERS_COLL)
-        .document(docId)
-        .get()
-        .await()
-        .toObject(User::class.java)
+    override suspend fun getProfileByDocumentId(docId: String): User? =
+        usersColl
+            .document(docId)
+            .get()
+            .await()
+            .toObject(User::class.java)
 
 }
 

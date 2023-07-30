@@ -2,6 +2,10 @@ package com.example.messagingapp.data.service
 
 import com.example.messagingapp.data.model.Channel
 import com.example.messagingapp.data.model.Post
+import com.example.messagingapp.utils.Constants.CHANNELS_COLL
+import com.example.messagingapp.utils.Constants.LAST_POST_FIELD
+import com.example.messagingapp.utils.Constants.LAST_UPDATED_FIELD
+import com.example.messagingapp.utils.Constants.POSTS_COLL
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
@@ -14,11 +18,13 @@ import javax.inject.Singleton
 @Singleton
 class PostServiceImpl @Inject constructor(
     private val firestore: FirebaseFirestore
-): PostService {
+) : PostService {
+
+    private val channelsColl = firestore.collection(CHANNELS_COLL)
 
     override fun getChannelPostsFlow(channelId: String) = callbackFlow {
-        val listener = firestore.collection("channels").document(channelId)
-            .collection("posts")
+        val listener = channelsColl.document(channelId)
+            .collection(POSTS_COLL)
             .addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) cancel()
                 else trySend(snapshot.toObjects(Post::class.java))
@@ -27,14 +33,14 @@ class PostServiceImpl @Inject constructor(
     }
 
     override suspend fun savePost(channelId: String, post: Post) {
-        val channelRef = firestore.collection("channels").document(channelId)
-        val postRef = channelRef.collection("posts").document()
+        val channelRef = channelsColl.document(channelId)
+        val postRef = channelRef.collection(POSTS_COLL).document()
         firestore.runBatch { writeBatch ->
             val sendTime = System.currentTimeMillis()
             val postWithTimestamp = post.copy(postedAt = sendTime)
             writeBatch.set(postRef, postWithTimestamp)
-            writeBatch.update(channelRef, "lastPost", postWithTimestamp)
-            writeBatch.update(channelRef, "lastUpdated", sendTime)
+            writeBatch.update(channelRef, LAST_POST_FIELD, postWithTimestamp)
+            writeBatch.update(channelRef, LAST_UPDATED_FIELD, sendTime)
 
         }.await()
     }
