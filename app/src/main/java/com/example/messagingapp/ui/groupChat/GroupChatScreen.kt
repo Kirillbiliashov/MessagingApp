@@ -37,6 +37,9 @@ import com.example.messagingapp.data.model.Chat
 import com.example.messagingapp.data.model.Message
 import com.example.messagingapp.data.model.headerName
 import com.example.messagingapp.data.model.timestampToString
+import com.example.messagingapp.ui.components.BackNavigationIcon
+import com.example.messagingapp.ui.components.DateBadge
+import com.example.messagingapp.ui.components.MessageCard
 import com.example.messagingapp.ui.components.MessageTextField
 import com.example.messagingapp.utils.Helpers
 import com.example.messagingapp.utils.Helpers.asTimestampToString
@@ -62,9 +65,7 @@ fun GroupChatScreen(
                 )
             }
         }, navigationIcon = {
-            IconButton(onClick = onBackClick) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
-            }
+            BackNavigationIcon(onBackClick = onBackClick)
         })
     }) { padding ->
         Column(
@@ -78,19 +79,7 @@ fun GroupChatScreen(
                 it.timestampToString("MM.dd.yyyy")
             }
             messagesByDateMap.forEach { (date, messages) ->
-                Badge(
-                    containerColor = MaterialTheme.colorScheme.outlineVariant,
-                    modifier = modifier.padding(vertical = 8.dp)
-                ) {
-                    val displayDate = if (date == Helpers.currDate
-                            .asTimestampToString("MM.dd.yyyy")
-                    )
-                        "Today" else date
-                    Text(
-                        text = displayDate,
-                        modifier = modifier.padding(4.dp), fontSize = 12.sp
-                    )
-                }
+                DateBadge(date = date)
                 LazyColumn {
                     items(items = messages) { message ->
                         if (members.isNotEmpty()) {
@@ -105,9 +94,11 @@ fun GroupChatScreen(
                 }
             }
             Spacer(modifier = modifier.weight(1f))
-            MessageTextField(value = uiState.value.currentMessage,
+            MessageTextField(
+                value = uiState.value.currentMessage,
                 onValueChange = viewModel::updateCurrentMessageTextField,
-                onSendIconClick = viewModel::sendMessage)
+                onSendIconClick = viewModel::sendMessage
+            )
         }
     }
 }
@@ -123,34 +114,15 @@ fun GroupMessageRow(
     val userRowModifier = if (isCurrUserSender)
         modifier.padding(start = 24.dp, end = 8.dp)
     else modifier.padding(start = 8.dp, end = 24.dp)
-    val contentTopPadding = if (isCurrUserSender) 4.dp else 16.dp
     Row(modifier = userRowModifier.fillMaxWidth()) {
         if (isCurrUserSender) {
             Spacer(modifier = modifier.weight(1f))
         }
-        Card(modifier = modifier.padding(4.dp)) {
-            Box {
-                Column(
-                    modifier = modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 8.dp, bottom = 4.dp, start = 4.dp)
-                ) {
-                    Text(text = message.timestampToString("HH:mm"), fontSize = 12.sp)
-                }
-                Column(
-                    modifier = modifier
-                        .padding(top = contentTopPadding,
-                            bottom = 4.dp, end = 44.dp, start = 8.dp)
-                ) {
-                    Text(text = message.content!!, fontSize = 16.sp)
-                }
-                if (!isCurrUserSender) {
-                    Column(modifier = modifier.padding(start = 8.dp)) {
-                        Text(text = username)
-                    }
-                }
-            }
-        }
+        MessageCard(
+            title = if (isCurrUserSender) null else username,
+            content = message.content!!,
+            timestamp = message.timestampToString("HH:mm")
+        )
         if (!isCurrUserSender) {
             Spacer(modifier = modifier.weight(1f))
         }

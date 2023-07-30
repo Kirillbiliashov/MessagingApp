@@ -36,6 +36,7 @@ import com.example.messagingapp.data.model.User
 import com.example.messagingapp.data.model.timestampToString
 import com.example.messagingapp.ui.components.BackNavigationIcon
 import com.example.messagingapp.ui.components.DateBadge
+import com.example.messagingapp.ui.components.MessageCard
 import com.example.messagingapp.ui.components.MessageTextField
 import com.example.messagingapp.utils.Helpers
 import com.example.messagingapp.utils.Helpers.asTimestampToString
@@ -125,25 +126,10 @@ fun MessageRow(
         if (message.senderId == userId) {
             Spacer(modifier = modifier.weight(1f))
         }
-        Card(modifier = modifier.padding(4.dp)) {
-            Box {
-                Column(
-                    modifier = modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 8.dp, bottom = 4.dp)
-                ) {
-                    Text(text = message.timestampToString("HH:mm"), fontSize = 12.sp)
-                }
-                Column(
-                    modifier = modifier
-                        .padding(8.dp)
-                        .padding(end = 36.dp),
-                    horizontalAlignment = Alignment.End
-                ) {
-                    Text(text = message.content!!, fontSize = 16.sp)
-                }
-            }
-        }
+        MessageCard(
+            content = message.content!!,
+            timestamp = message.timestampToString("HH:mm")
+        )
         if (message.senderId == participantId) {
             Spacer(modifier = modifier.weight(1f))
         }

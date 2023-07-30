@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Badge
+import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.messagingapp.data.model.timestampToString
 import com.example.messagingapp.utils.Helpers
 import com.example.messagingapp.utils.Helpers.asTimestampToString
 import com.google.firebase.database.collection.R
@@ -229,5 +231,38 @@ fun DateBadge(date: String,
             text = displayDate,
             modifier = modifier.padding(4.dp), fontSize = 12.sp
         )
+    }
+}
+
+@Composable
+fun MessageCard(
+    modifier: Modifier = Modifier,
+    title: String? = null, content: String, timestamp: String
+) {
+    val contentTopPadding = if (title == null) 4.dp else 16.dp
+    Card(modifier = modifier.padding(4.dp)) {
+        Box {
+            Column(
+                modifier = modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 8.dp, bottom = 4.dp, start = 4.dp)
+            ) {
+                Text(text = timestamp, fontSize = 12.sp)
+            }
+            Column(
+                modifier = modifier
+                    .padding(
+                        top = contentTopPadding,
+                        bottom = 4.dp, end = 44.dp, start = 8.dp
+                    )
+            ) {
+                Text(text = content, fontSize = 16.sp)
+            }
+            if (title != null) {
+                Column(modifier = modifier.padding(horizontal = 8.dp)) {
+                    Text(text = title)
+                }
+            }
+        }
     }
 }

@@ -42,6 +42,7 @@ import com.example.messagingapp.data.model.timestampToString
 import com.example.messagingapp.ui.chat.MessageRow
 import com.example.messagingapp.ui.components.BackNavigationIcon
 import com.example.messagingapp.ui.components.DateBadge
+import com.example.messagingapp.ui.components.MessageCard
 import com.example.messagingapp.ui.components.MessageTextField
 import com.example.messagingapp.utils.Helpers.asTimestampToString
 import com.google.firebase.appcheck.interop.R
@@ -174,35 +175,11 @@ fun ChannelPostRow(
             .padding(start = 8.dp, end = 24.dp)
             .fillMaxWidth()
     ) {
-        Card(modifier = modifier.padding(4.dp)) {
-            Box {
-                Column(
-                    modifier = modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 8.dp, bottom = 4.dp, start = 4.dp)
-                ) {
-                    Text(
-                        text = post.postedAt!!.asTimestampToString("HH:mm"),
-                        fontSize = 12.sp
-                    )
-                }
-                Column(
-                    modifier = modifier
-                        .padding(
-                            top = 16.dp,
-                            bottom = 4.dp, end = 44.dp, start = 8.dp
-                        )
-                ) {
-                    Text(text = post.content!!, fontSize = 16.sp)
-                }
-                Column(
-                    modifier = modifier
-                        .padding(horizontal = 8.dp)
-                ) {
-                    Text(text = channel?.name ?: "")
-                }
-            }
-        }
+        MessageCard(
+            title = channel?.name ?: "",
+            content = post.content!!,
+            timestamp = post.postedAt!!.asTimestampToString("HH:mm")
+        )
         Spacer(modifier = modifier.weight(1f))
     }
 }
