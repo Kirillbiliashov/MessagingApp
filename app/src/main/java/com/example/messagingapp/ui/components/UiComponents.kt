@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -37,6 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.messagingapp.utils.Helpers
 import com.example.messagingapp.utils.Helpers.asTimestampToString
 import com.google.firebase.database.collection.R
 
@@ -207,5 +210,24 @@ fun SearchTextField(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DateBadge(date: String,
+              modifier: Modifier = Modifier) {
+    Badge(
+        containerColor = MaterialTheme.colorScheme.outlineVariant,
+        modifier = modifier.padding(vertical = 8.dp)
+    ) {
+        val displayDate = if (date == Helpers.currDate
+                .asTimestampToString("MM.dd.yyyy")
+        )
+            "Today" else date
+        Text(
+            text = displayDate,
+            modifier = modifier.padding(4.dp), fontSize = 12.sp
+        )
     }
 }

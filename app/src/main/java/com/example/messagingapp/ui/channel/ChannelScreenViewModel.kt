@@ -5,40 +5,57 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.messagingapp.data.model.Channel
 import com.example.messagingapp.data.model.Post
+import com.example.messagingapp.data.model.User
+import com.example.messagingapp.data.service.AuthenticationService
 import com.example.messagingapp.data.service.ChannelService
 import com.example.messagingapp.data.service.PostService
+import com.example.messagingapp.data.service.UserProfileService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class UiState(
+    val currUser: User? = null,
     val channel: Channel? = null,
     val posts: List<Post> = listOf(),
     val currentPost: String = ""
-)
+) {
+    val isUserAdmin: Boolean
+        get() = currUser?.docId == channel?.ownerId
+
+    val isUserSubscribed: Boolean
+        get() = currUser?.channelTags?.contains(channel?.tag) ?: false
+
+}
 
 @HiltViewModel
 class ChannelScreenViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val channelService: ChannelService,
-    private val postService: PostService
+    private val postService: PostService,
+    private val userProfileService: UserProfileService
 ) : ViewModel() {
 
     private val channelId: String = requireNotNull(savedStateHandle["channelId"])
 
     private val channelFlow = MutableStateFlow<Channel?>(null)
     private val currentPostFlow = MutableStateFlow("")
+    private val currUserFlow = userProfileService.currentUserFlow
 
     val uiState = combine(
+        currUserFlow,
         channelFlow,
         postService.getChannelPostsFlow(channelId),
         currentPostFlow
-    ) { channel, posts, currentPost ->
-        UiState(channel = channel, posts = posts, currentPost = currentPost)
+    ) { currUser, channel, posts, currentPost ->
+        UiState(currUser = currUser, channel = channel, posts = posts, currentPost = currentPost)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000L),
@@ -62,6 +79,15 @@ class ChannelScreenViewModel @Inject constructor(
         currentPostFlow.value = ""
         viewModelScope.launch {
             postService.savePost(channelId, post)
+        }
+    }
+
+    fun subscribeToChannel() {
+        viewModelScope.launch {
+            channelService.subscribeToChannel(
+                user = uiState.value.currUser!!,
+                channel = uiState.value.channel!!
+            )
         }
     }
 

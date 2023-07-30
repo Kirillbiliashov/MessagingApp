@@ -1,6 +1,7 @@
 package com.example.messagingapp.data.service
 
 import com.example.messagingapp.data.model.Channel
+import com.example.messagingapp.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Filter
 import com.google.firebase.firestore.FirebaseFirestore
@@ -64,6 +65,17 @@ class ChannelServiceImpl @Inject constructor(
             .await()
             .toObject(Channel::class.java)
 
+    override suspend fun subscribeToChannel(user: User, channel: Channel) {
+        val userDoc = firestore.collection("users").document(user.docId!!)
+        val channelDoc = firestore.collection("channels").document(channel.docId!!)
+        val userChannels = user.channelTags ?: listOf()
+        val subscribersCount = channel.subscribersCount!!
+        firestore.runBatch { writeBatch ->
+            writeBatch.update(userDoc, "channelTags", userChannels + channel.tag)
+            writeBatch.update(channelDoc, "subscribersCount", subscribersCount + 1)
+        }.await()
+    }
+
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override val userChannelsFlow: Flow<List<Channel>> = userProfileService
@@ -93,4 +105,5 @@ interface ChannelService {
     suspend fun saveChannel(channel: Channel)
     suspend fun getChannelsByQuery(query: String): List<Channel>
     suspend fun getChannelByDocId(docId: String): Channel?
+    suspend fun subscribeToChannel(user: User, channel: Channel)
 }

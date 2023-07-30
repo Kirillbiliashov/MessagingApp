@@ -35,6 +35,7 @@ import com.example.messagingapp.data.model.Message
 import com.example.messagingapp.data.model.User
 import com.example.messagingapp.data.model.timestampToString
 import com.example.messagingapp.ui.components.BackNavigationIcon
+import com.example.messagingapp.ui.components.DateBadge
 import com.example.messagingapp.ui.components.MessageTextField
 import com.example.messagingapp.utils.Helpers
 import com.example.messagingapp.utils.Helpers.asTimestampToString
@@ -85,25 +86,6 @@ fun ChatScreen(
                 onSendIconClick = viewModel::sendMessage
             )
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DateBadge(date: String,
-    modifier: Modifier = Modifier) {
-    Badge(
-        containerColor = MaterialTheme.colorScheme.outlineVariant,
-        modifier = modifier.padding(vertical = 8.dp)
-    ) {
-        val displayDate = if (date == Helpers.currDate
-                .asTimestampToString("MM.dd.yyyy")
-        )
-            "Today" else date
-        Text(
-            text = displayDate,
-            modifier = modifier.padding(4.dp), fontSize = 12.sp
-        )
     }
 }
 
