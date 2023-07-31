@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.messagingapp.data.model.Channel
 import com.example.messagingapp.data.model.Post
+import com.example.messagingapp.data.model.ReactionType
 import com.example.messagingapp.data.model.timestampToString
 import com.example.messagingapp.ui.chat.MessageRow
 import com.example.messagingapp.ui.components.BackNavigationIcon
@@ -87,7 +90,17 @@ fun ChannelScreen(
                 DateBadge(date = date)
                 LazyColumn {
                     items(items = posts) { post ->
-                        ChannelPostRow(post = post, channel = channel)
+                        ChannelPostRow(
+                            post = post, channel = channel,
+                            liked = uiState.value.hasReaction(ReactionType.LIKE.toString(), post),
+                            disliked = uiState.value.hasReaction(
+                                ReactionType.DISLIKE.toString(),
+                                post
+                            ),
+                            onReactionClick = { type ->
+                                viewModel.reactToPost(post.docId!!, type)
+                            }
+                        )
                     }
                 }
             }
@@ -168,6 +181,9 @@ fun ChannelScreenTopBar(
 fun ChannelPostRow(
     post: Post,
     channel: Channel?,
+    liked: Boolean,
+    disliked: Boolean,
+    onReactionClick: (ReactionType) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -175,11 +191,83 @@ fun ChannelPostRow(
             .padding(start = 8.dp, end = 24.dp)
             .fillMaxWidth()
     ) {
-        MessageCard(
-            title = channel?.name ?: "",
-            content = post.content!!,
-            timestamp = post.postedAt!!.asTimestampToString("HH:mm")
+        PostCard(
+            channelName = channel?.name,
+            post = post,
+            liked = liked,
+            disliked = disliked,
+            onReactionClick = onReactionClick
         )
         Spacer(modifier = modifier.weight(1f))
+    }
+}
+
+@Composable
+fun PostCard(
+    channelName: String?,
+    modifier: Modifier = Modifier,
+    post: Post,
+    liked: Boolean, disliked: Boolean,
+    onReactionClick: (ReactionType) -> Unit
+) {
+    Card(modifier = modifier.padding(4.dp)) {
+        Box {
+            Column(
+                modifier = modifier
+                    .align(Alignment.TopStart)
+                    .padding(end = 48.dp, start = 8.dp, bottom = 4.dp, top = 4.dp)
+            ) {
+                if (channelName != null) {
+                    Text(text = channelName)
+                }
+                Text(text = post.content!!, fontSize = 16.sp)
+                Row {
+                    val likeColor = if (liked) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.outlineVariant
+                    val dislikeColor = if (disliked) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.outlineVariant
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = likeColor
+                        ),
+                        modifier = modifier.clickable {
+                            onReactionClick(ReactionType.LIKE)
+                        }
+                    ) {
+                        Text(
+                            text = "\uD83D\uDC4D ${post.likesCount}",
+                            modifier = modifier.padding(4.dp),
+                            fontSize = 12.sp
+                        )
+                    }
+                    Spacer(modifier = modifier.width(8.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = dislikeColor
+                        ),
+                        modifier = modifier.clickable {
+                            onReactionClick(ReactionType.DISLIKE)
+                        }
+                    ) {
+                        Text(
+                            text = "\uD83D\uDC4E ${post.dislikesCount}",
+                            modifier = modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+                            fontSize = 12.sp
+                        )
+                    }
+
+                }
+            }
+            Column(
+                modifier = modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 8.dp, bottom = 4.dp, start = 4.dp)
+            ) {
+                Text(
+                    text = post.postedAt!!.asTimestampToString("HH:mm"),
+                    fontSize = 12.sp
+                )
+            }
+        }
     }
 }

@@ -10,6 +10,8 @@ import com.example.messagingapp.data.service.MessageService
 import com.example.messagingapp.data.service.MessageServiceImpl
 import com.example.messagingapp.data.service.PostService
 import com.example.messagingapp.data.service.PostServiceImpl
+import com.example.messagingapp.data.service.ReactionService
+import com.example.messagingapp.data.service.ReactionServiceImpl
 import com.example.messagingapp.data.service.UserProfileService
 import com.example.messagingapp.data.service.UserProfileServiceImpl
 import com.google.firebase.auth.FirebaseAuth
@@ -62,6 +64,13 @@ abstract class ServiceModule {
     abstract fun bindPostService(
         postService: PostServiceImpl
     ): PostService
+
+    @Binds
+    @Singleton
+    abstract fun bindReactionService(
+        reactionService: ReactionServiceImpl
+    ): ReactionService
+
 }
 
 
